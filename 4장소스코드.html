@@ -1,0 +1,798 @@
+
+
+
+로고 추가하기----------------------------------------448p
+
+  <div class="navbar-header"> 
+    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-2"> 
+      <span class="sr-only">내비게이션 토글</span> 
+      <span class="icon-bar"></span> 
+      <span class="icon-bar"></span> 
+      <span class="icon-bar"></span> 
+    </button> 
+    <a class="logo p-lft-30" href="<?php echo home_url(); ?>"> 
+      <div class="site-title sr-only"> 
+        <?php bloginfo('name'); ?> 
+      </div> 
+      <img src="<?php echo of_get_option( 'logo_image', 'no entry' ); ?>"> 
+    </a><!-- .logo --> 
+  </div>
+
+
+
+
+ 	  $options[] = array( 
+ 	    'name' => __( '로고 이미지', 'theme-textdomain' ), 
+ 	    'desc' => __( '로고 이미지', 'theme-textdomain' ), 
+ 	    'id' => 'logo_image', 
+ 	    'type' => 'upload' 
+ 	  );
+
+
+
+
+ 	.logo img {  height: 50px;  width: auto; } 
+
+
+메뉴바 수정---------------------------------------449p
+ 
+ 	<body id="wide" data-spy="scroll" data-offset="200" <?php body_class(); ?>> 
+ 	  
+ 	<div id="page" class="hfeed site"> 
+ 	  <a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'twentyfifteen' ); ?></a> 
+ 	<div id="main-menu" class="container-fluid p-all-0"> 
+ 	  <nav id="nav" class="navbar navbar-default navbar-fixed-top  menubar-float bdr-0"> 
+ 	    <div class="container-fluid">
+
+
+
+
+ 	<body id="narrow" <?php body_class(); ?>> 
+ 	... 
+ 	<div id="page" class="hfeed site"> 
+ 	  <a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'twentyfifteen' ); ?></a> 
+ 	<div id="main-menu" class="container-fluid p-all-0"> 
+ 	  <nav id="nav" class="navbar navbar-default bdr-0"> 
+ 	    <div class="container">
+
+
+
+
+
+ 	/*메뉴바*/ 
+ 	.navbar-default { opacity: 0.9; } 
+ 	/*.home #main-menu { position: fixed; top: 32px; left: 0; z-index: 10; width: 100%;}*/ 
+
+
+
+ 
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  #nav.menubar-float { width: 1200px;   margin: 50px auto;   } 
+ 	  .shadow-border, #wide .navbar-default { box-shadow:  0 1px 10px rgba(0,0,0,.1); } 
+ 	  #wide .navbar-default.menubar-float { top: 32px; box-shadow: none; padding: 10px; font-size: 16px; } 
+ 	}
+
+
+--------------------------------------------------451p
+
+ 	//메뉴바 
+ 	$(window).scroll(function () { 
+ 	  var scroll = $(window).scrollTop(); 
+ 	  var windowWidth = $(window).innerWidth(); 
+ 	  if (scroll >= 120 && windowWidth > 960 ) { 
+ 	    if ($('body').hasClass('admin-bar')) { 
+ 	      $("#nav").addClass("shadow-border navbar-fixed-top").css('top', '32px'); 
+ 	    } else { 
+ 	      $("#nav").addClass("shadow-border navbar-fixed-top").css('top', '0px'); 
+ 	    } 
+ 	   $('#wide #nav').removeClass('menubar-float'); 
+ 	  } else { 
+ 	    $("#narrow #nav").removeClass("shadow-border navbar-fixed-top").css('top', '0');   
+ 	    $('#wide #nav').addClass('navbar-fixed-top  menubar-float '); 
+ 	  }        
+ 	});
+
+
+
+-----------------------------------------------457p
+
+
+ 	register_nav_menus( array( 
+ 	    'secondary' => __( 'Secondary Menu', 'the_bootstrap' ), 
+ 	) ); 
+ 	register_nav_menus( array( 
+ 	    'Top' => __( '탑메뉴', 'the_bootstrap' ), 
+ 	) );
+
+
+
+탑메뉴 만들기----------------------------------------458p
+
+
+ 	<div id="page" class="hfeed site"> 
+ 	  <a class="skip-link screen-reader-text" href="#content"><?php _e( 'Skip to content', 'twentyfifteen' ); ?></a> 
+ 	<!-- 탑메뉴 --> 
+ 	<div class="container-fluid top-menu p-all-0"> 
+ 	  <?php get_template_part('code-block/top', 'menu'); ?> 
+ 	</div> 
+ 	<!-- 메인메뉴 --> 
+ 	<div id="main-menu" class="container-fluid p-all-0"> 
+ 	  <nav id="nav" class="navbar navbar-default bdr-0"> 
+ 	    <div class="container"> 
+ 	      <!-- Brand and toggle get grouped for better mobile display --> 
+ 	      <div class="navbar-header"> 
+ 	        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1, #navbar-collapse-3"> 
+ 	          <span class="sr-only">내비게이션 토글</span>
+
+
+
+
+
+ 	  <div class="container bg-fff"> 
+ 	    <div id="navbar-collapse-3" class="collapse navbar-collapse member-login p-all-0"> 
+ 	      <ul class="nav navbar-nav top-left  hidden-xs"> 
+ 	        ...탑메뉴 좌측 
+ 	      </ul> 
+ 	      <ul class="nav navbar-nav navbar-right"> 
+ 	        ...탑메뉴 우측 로그인/회원가입 
+ 	      </ul> 
+ 	      <ul class="nav navbar-nav navbar-right"> 
+ 	        ...탑메뉴 우측 메뉴 화면에서 만든 메뉴 
+ 	      </ul> 
+ 	    </div>  
+ 	  </div> <!-- #navbar-collapse-3 -->
+
+
+
+
+ 	      <ul class="nav navbar-nav top-left  hidden-xs"> 
+ 	        <li> 
+ 	          <span><?php echo of_get_option( 'top-left-content', 'no entry' ); ?></span> 
+ 	        </li> 
+ 	      </ul>
+
+
+
+ 	      <ul class="nav navbar-nav navbar-right"> 
+ 	        <?php if ( !is_user_logged_in() ) { ?> 
+ 	        <li> 
+ 	          <a href="#" data-toggle="modal" data-target="#myModal"><i class="fa fa-users"></i> 회원가입  </a> 
+ 	        </li> 
+ 	        <li class="dropdown"> 
+ 	          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false"><i class="fa fa-sign-in"></i> 로그인</a> 
+ 	          <div class="dropdown-menu" role="menu"> 
+ 	            <div class="wth-100"> 
+ 	              <?php echo do_shortcode('[wp-members page="login"]');?> 
+ 	            </div> 
+ 	          </div> 
+ 	        </li> 
+ 	        <?php } else { ?> 
+ 	         <li><a href="<?php echo wp_logout_url( get_permalink() ); ?>" title="로그아웃">로그아웃 <i class="fa fa-sign-out"></i></a> 
+ 	         </li> 
+ 	        <?php } ?>
+
+
+탑메뉴 오른쪽(메뉴 화면에서 만든 메뉴)-----------------------460p
+
+ 	      <ul class="nav navbar-nav navbar-right"> 
+ 	        <div class="menu2"> 
+ 	          <?php 
+ 	              wp_nav_menu( array( 
+ 	                  'menu'              => 'Top', 
+ 	                  'theme_location'    => 'Top', 
+ 	                  'depth'             => 1, 
+ 	                  'container'         => 'div', 
+ 	                  'container_class'   => 'collapse navbar-collapse ', 
+ 	          // 'container_id'      => 'navbar-collapse-3', 
+ 	                  'menu_class'        => 'nav navbar-nav navbar-right', 
+ 	                  'fallback_cb'       => 'wp_bootstrap_navwalker::fallback', 
+ 	                  'walker'            => new wp_bootstrap_navwalker()) 
+ 	              ); 
+ 	          ?> 
+ 	        </div><!-- /.container --> 
+ 	      </ul>
+
+
+
+
+ 	<!-- Modal --> 
+ 	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"> 
+ 	  <div class="modal-dialog"> 
+ 	    <div class="modal-content"> 
+ 	      <div class="modal-header"> 
+ 	        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> 
+ 	        <h4 class="modal-title" id="myModalLabel">회원가입</h4> 
+ 	      </div> 
+ 	      <div class="modal-body"> 
+ 	        <div class="wth-100"> 
+ 	          <?php echo do_shortcode('[wp-members page="register"]');?> 
+ 	        </div> 
+ 	      </div> 
+ 	      <div class="modal-footer"> 
+ 	       <!--  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button> 
+ 	        <button type="button" class="btn btn-primary">Save changes</button> --> 
+ 	      </div> 
+ 	    </div> 
+ 	  </div> 
+ 	</div>
+
+
+
+
+ 	add_filter( 'wpmem_login_form_args',    'remove_wpmem_txt_code' ); 
+ 	add_filter( 'wpmem_register_form_args', 'remove_wpmem_txt_code' ); 
+ 	function remove_wpmem_txt_code( $args ){ 
+ 	  $args = array( 
+ 	    'txt_before' => '', 
+ 	    'txt_after'  => '' 
+ 	  ); 
+ 	  return $args; 
+ 	}
+
+
+스타일 수정하기----------------------------------463p
+
+ 	/*탑메뉴*/ 
+ 	#navbar-collapse-3 .dropdown-menu { 
+ 	min-width: 200px; 
+ 	} 
+ 	#wpmem_reg fieldset, #wpmem_login fieldset { 
+ 	  margin: 10px 0 10px !important; 
+ 	  padding: 0 10px !important; 
+ 	} 
+ 	#wpmem_reg legend, #wpmem_login legend { 
+ 	  font-size: 18px !important; 
+ 	  border-bottom: none; 
+ 	} 
+ 	#wpmem_reg .div_text, #wpmem_login .div_text { 
+ 	  width: 100%!important; 
+ 	  margin: 0 0 10px 0 !important; 
+ 	} 
+ 	#wpmem_reg .div_text input, #wpmem_login .div_text input, #wpmem_reg input { 
+ 	  border-radius: 4px !important; 
+ 	} 
+ 	#wpmem_reg input[type="text"], #wpmem_login input[type="text"] { 
+ 	  padding: 4px 10px !important; 
+ 	} 
+ 	#wpmem_reg fieldset:last-child { 
+ 	  margin-bottom: 10px !important; 
+ 	} 
+ 	#wpmem_login .button_div { 
+ 	  width: inherit !important; 
+ 	} 
+ 	#wpmem_reg .button_div { 
+ 	  width: 100%!important; 
+ 	  margin: 0 !important; 
+ 	} 
+ 	article #wpmem_reg img { 
+ 	  width: inherit; 
+ 	}
+
+
+
+
+
+
+ 	.container-fluid.top-menu { border-bottom: 1px solid #f2f2f2; margin-bottom: 20px; } 
+ 	#narrow .navbar-default { background-color: #fff; border-color: #fff; } 
+ 	@media (min-width: 768px) { 
+ 	    ... 
+ 	  .top-menu .navbar-nav > li > a {  padding: 7px 0;  } 
+ 	  .top-left { padding: 7px 0; } 
+ 	}  
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  #narrow .top-menu .container { width: 1168px; } 
+ 	} 
+ 	@media (max-width: 767px) and (min-width: 400px) { 
+ 	  ... 
+ 	  #narrow .navbar-nav { margin: 0; } 
+ 	}  
+
+
+
+
+ 	@media (min-width: 768px) { 
+ 	  ... 
+ 	 #narrow #main-menu .navbar-nav>li>a { padding-top: 7px;  padding-bottom: 7px;  margin-top: 7px;  margin-bottom: 7px;  border-radius: 3px;  } 
+ 	}  
+
+
+
+
+ 	#nav { z-index: 10; } 
+
+
+
+
+ 
+ 	$('label[for="user_email"]').wrapInTag({ 
+ 	  tag: 'span', 
+ 	  words: ['Email'] 
+ 	}); 
+ 	$('label[for="user_email"] span').text('이메일'); 
+
+
+옵션 설정-----------------------------------------------465p
+
+
+ 	  // $options[] = array( 
+ 	  //   'name' => __('탑메뉴 좌측 콘텐츠', 'options_check'), 
+ 	  //   'desc' => __('탑메뉴 좌측 콘텐츠.', 'options_check'), 
+ 	  //   'id' => 'top-left-content', 
+ 	  //   'std' => '', 
+ 	  //   'type' => 'textarea'); 
+ 	  
+ 	  $wp_editor_settings = array( 
+ 	    'wpautop' => true, // Default 
+ 	    'textarea_rows' => 1, 
+ 	    'media_buttons' => true 
+ 	  ); 
+ 	  $options[] = array( 
+ 	    'name' => __( '탑메뉴 좌측 콘텐츠', 'theme-textdomain' ), 
+ 	    'desc' => sprintf( __( '탑메뉴 좌측 콘텐츠', 'theme-textdomain' )), 
+ 	    'id' => 'top-left-content', 
+ 	    'type' => 'editor', 
+ 	    'settings' => $wp_editor_settings 
+ 	  );
+
+
+
+이용약관 페이지 만들기-----------------------------467p
+
+ 	<button id="close-all" class="btn btn-default" type="button">모두 닫기</button> <button id="open-all" class="btn btn-primary" type="button">모두 열기</button> 
+ 	  
+ 	<div id="accordion" class="panel-group m-top-10"> 
+ 	  <div class="panel panel-default"> 
+ 	    <div id="headingOne" class="panel-heading"> 
+ 	      <h4 class="panel-title"><a href="#collapseOne" data-toggle="collapse" data-parent="#accordion"> 제 1 조 </a></h4> 
+ 	    </div> 
+ 	    <div id="collapseOne" class="panel-collapse collapse in"> 
+ 	      <div class="panel-body">Anim pariatur cliche reprehenderit, enim eiusmod high ....</div> 
+ 	    </div> 
+ 	  </div> 
+ 	  ... 
+ 	</div>
+
+
+
+
+
+ 	//어코디언 
+ 	$('#close-all').click(function(){ 
+ 	  $('.panel-collapse.in').collapse('hide'); 
+ 	}); 
+ 	$('#open-all').click(function(){ 
+ 	  $('.panel-collapse:not(".in")').collapse('show'); 
+ 	});
+
+
+
+
+ 	#accordion .panel-heading { padding: 0; } 
+ 	#accordion .panel-heading a { padding: 10px 15px; display: block; text-decoration: none; } 
+
+
+Contact Form 7 사용하기--------------------------------469p
+
+
+
+ 	// 콘택트 폼 7 부트스트랩 클래스 추가 
+ 	add_filter( 'wpcf7_form_class_attr', 'wildli_custom_form_class_attr' ); 
+ 	function wildli_custom_form_class_attr( $class ) { 
+ 	  $class .= ' form-horizontal'; 
+ 	  return $class; 
+ 	}
+
+
+
+
+
+ 	<div class="form-horizontal"> 
+ 	  <div class="form-group"> 
+ 	    <label class="col-sm-2 control-label required" for="yourEmail">이름</label> 
+ 	    <div class="col-sm-10">[text* your-name  class:form-control]</div> 
+ 	  </div> 
+ 	  <div class="form-group"> 
+ 	    <label class="col-sm-2 control-label required" for="yourEmail">이메일</label> 
+ 	    <div class="col-sm-10">[email* your-email id:yourEmail class:form-control]</div> 
+ 	  </div> 
+ 	  <div class="form-group"> 
+ 	    <label class="col-sm-2 control-label required" for="yourEmail">제목</label> 
+ 	    <div class="col-sm-10">[text* your-subject id:your-subject class:form-control]</div> 
+ 	  </div> 
+ 	  <div class="form-group"> 
+ 	    <label class="col-sm-2 control-label required" for="yourMessage">메시지</label> 
+ 	    <div class="col-sm-10">[textarea* your-message id:yourMessage class:form-control x5]</div> 
+ 	  </div> 
+ 	  <div class="form-group"> 
+ 	    <label class="col-sm-2 control-label required" for="captcha">[captchac captcha-490 size:s]</label> 
+ 	    <div class="col-sm-10">[captchar id:captcha class:form-control captcha-490]</div> 
+ 	  </div> 
+ 	  <div class="form-group"> 
+ 	    <div class="col-sm-offset-2 col-sm-10"><button type="submit" class="btn btn-large btn-primary">보내기</button><img class="ajax-loader" src="http://localhost/wordpress-bootstrap2/wp-content/plugins/contact-form-7/images/ajax-loader.gif" alt="Sending ..." style="visibility: hidden; opacity: 1;"></div> 
+ 	  </div> 
+ 	</div> 
+
+
+
+구글 맵 사용하기----------------------------------------473p
+
+
+http://gmap3.net/
+
+
+
+
+ 	  <script src="http://maps.googleapis.com/maps/api/js?sensor=false" type="text/javascript"></script> 
+ 	  <?php wp_head(); ?> 
+ 	</head>
+
+
+
+
+ 	  wp_enqueue_script('gmap-js', get_stylesheet_directory_uri() . '/js/gmap3.min.js', array('jquery'), null, true); 
+
+
+
+
+
+ 	#googleMap, #googleMap2 { width: 100%; height: 500px; } 
+ 	#googleMap img, #googleMap2 img { max-width: inherit; } 
+
+
+
+
+
+ 	//구글맵 
+ 	var $map = $("#googleMap"); 
+ 	  
+ 	$map.gmap3({ 
+ 	map: { 
+ 	    options: { 
+ 	      maxZoom: 19, 
+ 	      scrollwheel: false 
+ 	    }  
+ 	}, 
+ 	marker:{ 
+ 	    latLng:[37.4946063,127.040223,15], 
+ 	    address: "역삼역", 
+ 	    options: { 
+ 	     icon: new google.maps.MarkerImage( 
+ 	       "http://gmap3.net/skin/gmap/magicshow.png", 
+ 	       new google.maps.Size(32, 37, "px", "px") 
+ 	     ) 
+ 	    } 
+ 	} 
+ 	}, 
+ 	"autofit" );
+
+
+전면 페이지에 코드 블록 만들기-------------------------------475p
+
+ 	    <div id="front-contact" class="container-fluid p-all-0 m-top-30"> 
+ 	      <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(324), array( 10000,10000 ) ); ?> 
+ 	      <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+ 	        <div class="container get_excerpt"> 
+ 	          <h1><?php echo get_the_title(324); ?></h1> 
+ 	          <p><?php echo get_excerpt_by_id(324); ?></p> 
+ 	        </div> 
+ 	      </div> 
+ 	      <div class="container p-all-0"> 
+ 	        <?php get_template_part('code-block/front', 'contact'); ?> 
+ 	      </div> 
+ 	    </div><!-- #front-contact -->  
+ 	    <div class="container-fluid googlemap p-all-0"> 
+ 	      <div id="googleMap"></div> 
+ 	    </div>
+
+
+
+
+ 	    <div class="container waypoint moveDown" data-animate-down="medium moveUp">  
+ 	      <div class="row"> 
+ 	        <div class="col-md-4"> 
+ 	          <div class="well"> 
+ 	            <h3>고객센터 안내</h3> 
+ 	            <?php echo do_shortcode('[contentblock id=customer-guide]'); ?> 
+ 	          </div> 
+ 	        </div>  
+ 	        <div class="col-md-4"> 
+ 	          <div class="well"> 
+ 	            <?php echo do_shortcode('[dwqa-latest-answers number="5" title="최근 답변"]'); ?> 
+ 	          </div> 
+ 	        </div>  
+ 	        <div class="col-md-4"> 
+ 	          <div class="well"> 
+ 	            <?php echo do_shortcode('[dwqa-popular-questions number="5" title="인기 질문"]'); ?> 
+ 	          </div> 
+ 	        </div> 
+ 	      </div> 
+ 	      <div class="row"> 
+ 	        <div class="col-md-4"> 
+ 	          <div class="well"> 
+ 	            <h3>회사 정보</h3> 
+ 	            <?php echo do_shortcode('[contentblock id=company-info]'); ?> 
+ 	          </div> 
+ 	        </div> 
+ 	        <div class="col-md-8"> 
+ 	          <?php echo do_shortcode( '[contact-form-7 id="373" title="컨택트 폼 1"]' ) ?> 
+ 	        </div> 
+ 	      </div> 
+ 	    </div>
+
+
+
+----------------------------------------------------477p
+
+ 	#front-contact .well { background-color: #fff; } 
+ 	#front-contact .well h3 { margin-top: 0; }
+
+
+
+
+
+ 	h2.widget-title, h2.entry-title, h1.entry-title, .author-info h2, .well h3 { font-size: 20px; padding-bottom: 10px; border-bottom: 1px solid #ddd; } 
+
+
+
+
+ 	$( ".entry-header, #front-contact, .widget-area" ).find('h1, h2, h3').wrapInner( "<span></span>"); 
+
+
+두 번째 홈페이지 푸터-----------------------------------479p
+
+
+ 	register_nav_menus( array( 
+ 	    'footer' => __( '푸터 메뉴', 'the_bootstrap' ), 
+ 	) );
+
+
+
+
+ 	    register_sidebar( array(
+ 	    'name'          => __( '푸터 위젯 영역', 'twentyfifteen' ),
+ 	    'id'            => 'sidebar-7',
+ 	    'description'   => __( 'Add widgets here to appear in your sidebar.', 'twentyfifteen' ),
+ 	    'before_widget' => '<aside id="%1$s" class="col-md-3 widget %2$s">',
+ 	    'after_widget'  => '</aside>',
+ 	    'before_title'  => '<h2 class="widget-title">',
+ 	    'after_title'   => '</h2>',
+ 	  ) );
+
+
+
+
+ 	  <footer id="colophon" class="container site-footer m-top-20" role="contentinfo"> 
+ 	    <div class="container footer-widget"> 
+ 	      <div class="row"> 
+ 	        <?php if ( is_active_sidebar( 'sidebar-7' ) ) : ?> 
+ 	          <div id="widget-area" class="widget-area" role="complementary"> 
+ 	            <?php dynamic_sidebar( 'sidebar-7' ); ?> 
+ 	          </div><!-- .widget-area --> 
+ 	        <?php endif; ?> 
+ 	      </div><!--/.footer-widget--> 
+ 	    </div>
+
+
+
+
+ 	    <nav id="footer-nav" class="navbar navbar-default bdr-0"> 
+ 	      <div class="container footer-bottom"> 
+ 	        <!-- Brand and toggle get grouped for better mobile display --> 
+ 	        <div class="navbar-header"> 
+ 	          <a class="logo p-lft-20" href="<?php echo home_url(); ?>"> 
+ 	            <div class="site-title sr-only"> 
+ 	              <?php bloginfo('name'); ?> 
+ 	            </div> 
+ 	            <img src="<?php echo of_get_option( 'logo_image', 'no entry' ); ?>"> 
+ 	          </a><!-- .logo --> 
+ 	        </div> 
+ 	  
+ 	        <!-- Collect the nav links, forms, and other content for toggling --> 
+ 	        <div class="footer-menu"> 
+ 	          <?php 
+ 	              wp_nav_menu( array( 
+ 	                  'menu'              => 'footer', 
+ 	                  'theme_location'    => 'footer', 
+ 	                  'depth'             => 2, 
+ 	                  'container'         => 'div', 
+ 	                  'container_class'   => 'collapse navbar-collapse ', 
+ 	          'container_id'      => 'navbar-collapse-4', 
+ 	                  'menu_class'        => 'nav navbar-nav navbar-right footer-nav', 
+ 	                  'fallback_cb'       => 'wp_bootstrap_navwalker::fallback', 
+ 	                  'walker'            => new wp_bootstrap_navwalker()) 
+ 	              ); 
+ 	          ?> 
+ 	        </div><!-- /.footer-menu --> 
+ 	      </div><!-- /.container --> 
+ 	    </nav>
+
+
+
+
+
+-----------------------------------------------482p
+
+ 	/*푸터*/ 
+ 	.footer-nav.navbar-nav>li>.dropdown-menu { 
+ 	  border-top-left-radius: 4px; 
+ 	  border-top-right-radius: 4px; 
+ 	  border-bottom-left-radius: 0px; 
+ 	  border-bottom-right-radius: 0px; 
+ 	} 
+ 	#wide #footer-nav.navbar-default { 
+ 	  box-shadow: 0 0px 0px rgba(0,0,0,.1); 
+ 	  border: none; 
+ 	  background-color: #fff; 
+ 	} 
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  #narrow .top-menu .container, .container.footer-bottom { width: 1168px; } 
+ 	}
+
+
+
+
+
+ 	  <footer id="colophon" class="site-footer m-top-20" role="contentinfo"> 
+ 	    <div class="container footer-widget"> 
+ 	      <div class="row"> 
+ 	        <?php if ( is_active_sidebar( 'sidebar-7' ) ) : ?> 
+ 	          <div id="widget-area" class="widget-area" role="complementary"> 
+ 	            <?php dynamic_sidebar( 'sidebar-7' ); ?> 
+ 	          </div><!-- .widget-area --> 
+ 	        <?php endif; ?> 
+ 	      </div> 
+ 	    </div><!--/.footer-widget-->
+
+
+
+
+ 	<?php get_footer('wide'); ?> 
+
+
+갤러리 템플릿 수정--------------------------------485p
+
+
+ 	<?php if ( get_field('container_layout') == '-fluid') : ?> 
+ 	<div class="container<?php echo the_field('container_layout'); ?> wide-layout"> 
+ 	<?php else: ?> 
+ 	<div class="container"> 
+ 	<?php endif; ?> 
+ 	  <div class="row"> 
+ 	    <div id="content" class="col-md-12"> 
+
+
+
+
+
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:20%; } 
+ 	} 
+ 	@media (min-width: 1400px) { 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:16.66666%; } 
+ 	}
+
+
+
+
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  .container-fluid.wide-layout { width: 1168px !important; } 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:25% !important; } 
+ 	} 
+ 	@media (min-width: 1400px) { 
+ 	  .container-fluid.wide-layout { width: 1168px !important; } 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:25% !important; } 
+ 	}
+
+
+
+
+ 	@media (min-width: 1200px) { 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:20%; } 
+ 	} 
+ 	@media (min-width: 1400px) { 
+ 	  .container-fluid.wide-layout .thumbs.col-md-3 { width:16.6666%; } 
+ 	}
+
+
+
+
+ 	  $('.wide-box').click( function() { 
+ 	    $container3.isotope('layout'); 
+ 	  });
+
+
+    <?php if(!is_front_page() && !is_page( array(495, 499))): ?>
+    <div class="visible-lg-block">
+      <a href="#" rel="<?php echo esc_url( get_stylesheet_directory_uri() ); ?>/style-wide.css" class="btn btn-default wide-box wide">와이드</a>
+      <a href="#" rel="<?php echo esc_url( get_stylesheet_directory_uri() ); ?>/style-box.css" class="btn btn-default wide-box box">박스</a>
+    </div>
+    <? endif; ?>
+
+
+
+캐러젤 만들기----------------------------------489p
+
+
+
+<?php get_header(); ?> 
+  
+    <?php $attachments = new Attachments( 'gallery_attachments' ); ?> 
+    <?php if( $attachments->exist() ) : ?> 
+    <div id="carousel" class="carousel slide" data-ride="carousel"> 
+      <ol class="carousel-indicators"> 
+        <li data-target="#carousel" data-slide-to="0" class="active"></li> 
+        <li data-target="#carousel" data-slide-to="1"></li> 
+        <li data-target="#carousel" data-slide-to="2"></li> 
+        <li data-target="#carousel" data-slide-to="3"></li> 
+        <li data-target="#carousel" data-slide-to="4"></li> 
+      </ol> 
+      <div class="carousel-inner" role="listbox"> 
+        <?php while( $attachments->get() ) : ?> 
+        <div class="item"> 
+          <?php echo $attachments->image( 'slider450' ); ?> 
+          <div class="carousel-caption"> 
+            <h3><?php echo $attachments->field( 'gallery_title' ); ?></h3> 
+            <p><?php echo $attachments->field( 'gallery_caption' ); ?></p> 
+          </div> 
+        </div> 
+        <?php endwhile; ?> 
+      </div> 
+      <nav class="carousel-navigation"> 
+        <a class="left carousel-control" href="#carousel" role="button" data-slide="prev"> 
+          <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> 
+          <span class="sr-only">Previous</span> 
+        </a> 
+        <a class="right carousel-control" href="#carousel" role="button" data-slide="next"> 
+          <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> 
+          <span class="sr-only">Next</span> 
+        </a> 
+      </nav> 
+    </div> 
+    <?php endif; ?> 
+  
+<?php get_footer(); ?>  
+
+
+
+$('.carousel-inner .item:first-child').addClass('active');
+
+
+.carousel-inner img { width: 100%; } 
+
+
+
+#narrow #front-page .code-block { margin-left:15px; margin-right:15px; } 
+
+
+
+  article img { width: 100% !important; } 
+  .navbar-nav { margin: 0; } 
+  #front-page .code-block { padding: 30px 0 !important; } 
+
+
+
+article .author-avatar img, .img-circle, .comment-author img { width: inherit !important; } 
+
+
+
+<div class="clearfix"></div> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,2725 @@
+
+
+워드프레스 코덱스 페이지의 예제------------------------297p
+
+
+http://codex.wordpress.org/Function_Reference/register_post_type
+
+
+
+
+ 	// Basic 
+ 	function codex_custom_init() { 
+ 	    $args = array( 
+ 	      'public' => true, 
+ 	      'label'  => 'Books' 
+ 	    ); 
+ 	    register_post_type( 'book', $args ); 
+ 	} 
+ 	add_action( 'init', 'codex_custom_init' ); 
+
+
+
+ 	//Elaborate: 
+add_action( 'init', 'codex_book_init' );
+/**
+ * Register a book post type.
+ *
+ * @link http://codex.wordpress.org/Function_Reference/register_post_type
+ */
+function codex_book_init() {
+	$labels = array(
+		'name'               => _x( 'Books', 'post type general name', 'your-plugin-textdomain' ),
+		'singular_name'      => _x( 'Book', 'post type singular name', 'your-plugin-textdomain' ),
+		'menu_name'          => _x( 'Books', 'admin menu', 'your-plugin-textdomain' ),
+		'name_admin_bar'     => _x( 'Book', 'add new on admin bar', 'your-plugin-textdomain' ),
+		'add_new'            => _x( 'Add New', 'book', 'your-plugin-textdomain' ),
+		'add_new_item'       => __( 'Add New Book', 'your-plugin-textdomain' ),
+		'new_item'           => __( 'New Book', 'your-plugin-textdomain' ),
+		'edit_item'          => __( 'Edit Book', 'your-plugin-textdomain' ),
+		'view_item'          => __( 'View Book', 'your-plugin-textdomain' ),
+		'all_items'          => __( 'All Books', 'your-plugin-textdomain' ),
+		'search_items'       => __( 'Search Books', 'your-plugin-textdomain' ),
+		'parent_item_colon'  => __( 'Parent Books:', 'your-plugin-textdomain' ),
+		'not_found'          => __( 'No books found.', 'your-plugin-textdomain' ),
+		'not_found_in_trash' => __( 'No books found in Trash.', 'your-plugin-textdomain' )
+	);
+
+	$args = array(
+		'labels'             => $labels,
+		'public'             => true,
+		'publicly_queryable' => true,
+		'show_ui'            => true,
+		'show_in_menu'       => true,
+		'query_var'          => true,
+		'rewrite'            => array( 'slug' => 'book' ),
+		'capability_type'    => 'post',
+		'has_archive'        => true,
+		'hierarchical'       => false,
+		'menu_position'      => null,
+		'supports'           => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'comments' )
+	);
+
+	register_post_type( 'book', $args );
+}
+
+
+------------------------------------------299p
+
+
+ 	//Customizing the messages: 
+add_filter( 'post_updated_messages', 'codex_book_updated_messages' );
+/**
+ * Book update messages.
+ *
+ * See /wp-admin/edit-form-advanced.php
+ *
+ * @param array $messages Existing post update messages.
+ *
+ * @return array Amended post update messages with new CPT update messages.
+ */
+function codex_book_updated_messages( $messages ) {
+	$post             = get_post();
+	$post_type        = get_post_type( $post );
+	$post_type_object = get_post_type_object( $post_type );
+
+	$messages['book'] = array(
+		0  => '', // Unused. Messages start at index 1.
+		1  => __( 'Book updated.', 'your-plugin-textdomain' ),
+		2  => __( 'Custom field updated.', 'your-plugin-textdomain' ),
+		3  => __( 'Custom field deleted.', 'your-plugin-textdomain' ),
+		4  => __( 'Book updated.', 'your-plugin-textdomain' ),
+		/* translators: %s: date and time of the revision */
+		5  => isset( $_GET['revision'] ) ? sprintf( __( 'Book restored to revision from %s', 'your-plugin-textdomain' ), wp_post_revision_title( (int) $_GET['revision'], false ) ) : false,
+		6  => __( 'Book published.', 'your-plugin-textdomain' ),
+		7  => __( 'Book saved.', 'your-plugin-textdomain' ),
+		8  => __( 'Book submitted.', 'your-plugin-textdomain' ),
+		9  => sprintf(
+			__( 'Book scheduled for: <strong>%1$s</strong>.', 'your-plugin-textdomain' ),
+			// translators: Publish box date format, see http://php.net/date
+			date_i18n( __( 'M j, Y @ G:i', 'your-plugin-textdomain' ), strtotime( $post->post_date ) )
+		),
+		10 => __( 'Book draft updated.', 'your-plugin-textdomain' )
+	);
+
+	if ( $post_type_object->publicly_queryable ) {
+		$permalink = get_permalink( $post->ID );
+
+		$view_link = sprintf( ' <a href="%s">%s</a>', esc_url( $permalink ), __( 'View book', 'your-plugin-textdomain' ) );
+		$messages[ $post_type ][1] .= $view_link;
+		$messages[ $post_type ][6] .= $view_link;
+		$messages[ $post_type ][9] .= $view_link;
+
+		$preview_permalink = add_query_arg( 'preview', 'true', $permalink );
+		$preview_link = sprintf( ' <a target="_blank" href="%s">%s</a>', esc_url( $preview_permalink ), __( 'Preview book', 'your-plugin-textdomain' ) );
+		$messages[ $post_type ][8]  .= $preview_link;
+		$messages[ $post_type ][10] .= $preview_link;
+	}
+
+	return $messages;
+}
+
+
+
+Adding contextual help:
+
+//display contextual help for Books
+
+function codex_add_help_text( $contextual_help, $screen_id, $screen ) {
+  //$contextual_help .= var_dump( $screen ); // use this to help determine $screen->id
+  if ( 'book' == $screen->id ) {
+    $contextual_help =
+      '<p>' . __('Things to remember when adding or editing a book:', 'your_text_domain') . '</p>' .
+      '<ul>' .
+      '<li>' . __('Specify the correct genre such as Mystery, or Historic.', 'your_text_domain') . '</li>' .
+      '<li>' . __('Specify the correct writer of the book.  Remember that the Author module refers to you, the author of this book review.', 'your_text_domain') . '</li>' .
+      '</ul>' .
+      '<p>' . __('If you want to schedule the book review to be published in the future:', 'your_text_domain') . '</p>' .
+      '<ul>' .
+      '<li>' . __('Under the Publish module, click on the Edit link next to Publish.', 'your_text_domain') . '</li>' .
+      '<li>' . __('Change the date to the date to actual publish this article, then click on Ok.', 'your_text_domain') . '</li>' .
+      '</ul>' .
+      '<p><strong>' . __('For more information:', 'your_text_domain') . '</strong></p>' .
+      '<p>' . __('<a href="http://codex.wordpress.org/Posts_Edit_SubPanel" target="_blank">Edit Posts Documentation</a>', 'your_text_domain') . '</p>' .
+      '<p>' . __('<a href="http://wordpress.org/support/" target="_blank">Support Forums</a>', 'your_text_domain') . '</p>' ;
+  } elseif ( 'edit-book' == $screen->id ) {
+    $contextual_help =
+      '<p>' . __('This is the help screen displaying the table of books blah blah blah.', 'your_text_domain') . '</p>' ;
+  }
+  return $contextual_help;
+}
+add_action( 'contextual_help', 'codex_add_help_text', 10, 3 );
+
+
+
+Adding WordPress 3.3+ Help Tab:
+
+function codex_custom_help_tab() {
+
+  $screen = get_current_screen();
+
+  // Return early if we're not on the book post type.
+  if ( 'book' != $screen->post_type )
+    return;
+
+  // Setup help tab args.
+  $args = array(
+    'id'      => 'you_custom_id', //unique id for the tab
+    'title'   => 'Custom Help', //unique visible title for the tab
+    'content' => '<h3>Help Title</h3><p>Help content</p>',  //actual help text
+  );
+  
+  // Add the help tab.
+  $screen->add_help_tab( $args );
+
+}
+
+add_action('admin_head', 'codex_custom_help_tab');
+
+
+
+----------------------------------------------300p
+
+http://codex.wordpress.org/Function_Reference/register_taxonomy
+
+
+
+
+// hook into the init action and call create_book_taxonomies when it fires
+add_action( 'init', 'create_book_taxonomies', 0 );
+
+// create two taxonomies, genres and writers for the post type "book"
+function create_book_taxonomies() {
+	// Add new taxonomy, make it hierarchical (like categories)
+	$labels = array(
+		'name'              => _x( 'Genres', 'taxonomy general name' ),
+		'singular_name'     => _x( 'Genre', 'taxonomy singular name' ),
+		'search_items'      => __( 'Search Genres' ),
+		'all_items'         => __( 'All Genres' ),
+		'parent_item'       => __( 'Parent Genre' ),
+		'parent_item_colon' => __( 'Parent Genre:' ),
+		'edit_item'         => __( 'Edit Genre' ),
+		'update_item'       => __( 'Update Genre' ),
+		'add_new_item'      => __( 'Add New Genre' ),
+		'new_item_name'     => __( 'New Genre Name' ),
+		'menu_name'         => __( 'Genre' ),
+	);
+
+	$args = array(
+		'hierarchical'      => true,
+		'labels'            => $labels,
+		'show_ui'           => true,
+		'show_admin_column' => true,
+		'query_var'         => true,
+		'rewrite'           => array( 'slug' => 'genre' ),
+	);
+
+	register_taxonomy( 'genre', array( 'book' ), $args );
+
+	// Add new taxonomy, NOT hierarchical (like tags)
+	$labels = array(
+		'name'                       => _x( 'Writers', 'taxonomy general name' ),
+		'singular_name'              => _x( 'Writer', 'taxonomy singular name' ),
+		'search_items'               => __( 'Search Writers' ),
+		'popular_items'              => __( 'Popular Writers' ),
+		'all_items'                  => __( 'All Writers' ),
+		'parent_item'                => null,
+		'parent_item_colon'          => null,
+		'edit_item'                  => __( 'Edit Writer' ),
+		'update_item'                => __( 'Update Writer' ),
+		'add_new_item'               => __( 'Add New Writer' ),
+		'new_item_name'              => __( 'New Writer Name' ),
+		'separate_items_with_commas' => __( 'Separate writers with commas' ),
+		'add_or_remove_items'        => __( 'Add or remove writers' ),
+		'choose_from_most_used'      => __( 'Choose from the most used writers' ),
+		'not_found'                  => __( 'No writers found.' ),
+		'menu_name'                  => __( 'Writers' ),
+	);
+
+	$args = array(
+		'hierarchical'          => false,
+		'labels'                => $labels,
+		'show_ui'               => true,
+		'show_admin_column'     => true,
+		'update_count_callback' => '_update_post_term_count',
+		'query_var'             => true,
+		'rewrite'               => array( 'slug' => 'writer' ),
+	);
+
+	register_taxonomy( 'writer', 'book', $args );
+}
+
+
+
+Custom Post Type UI 플러그인-----------------------303p
+
+
+https://developer.wordpress.org/resource/dashicons/#desktop
+
+
+ 	function add_menu_icons_styles(){ 
+ 	?> 
+ 	<style> 
+ 	#menu-posts-portfolio .dashicons-admin-post:before { 
+ 	  content: "\f322"; 
+ 	} 
+ 	</style> 
+ 	<?php 
+ 	} 
+ 	add_action( 'admin_head', 'add_menu_icons_styles' ); 
+
+
+----------------------------------------------306p
+<?php
+//포트폴리오 글 타입
+add_action('init', 'cptui_register_my_cpt_portfolio');
+function cptui_register_my_cpt_portfolio() {
+register_post_type('portfolio', array(
+'label' => '포트폴리오',
+'description' => '',
+'public' => true,
+'show_ui' => true,
+'show_in_menu' => true,
+'capability_type' => 'post',
+'map_meta_cap' => true,
+'hierarchical' => false,
+'rewrite' => array('slug' => 'portfolio', 'with_front' => true),
+'query_var' => true,
+'supports' => array('title','editor','excerpt','trackbacks','custom-fields','comments','revisions','thumbnail','author','page-attributes','post-formats'),
+'taxonomies' => array('post_tag'),
+'labels' => array (
+  'name' => '포트폴리오',
+  'singular_name' => '포트폴리오',
+  'menu_name' => '포트폴리오',
+  'add_new' => '새로 추가',
+  'add_new_item' => '새 포트폴리오 추가',
+  'edit' => '편집',
+  'edit_item' => '포트폴리오 편집',
+  'new_item' => '새 포트폴리오',
+  'view' => '보기',
+  'view_item' => '포트폴리오 보기',
+  'search_items' => '포트폴리오 검색',
+  'not_found' => '포트폴리오가 없습니다',
+  'not_found_in_trash' => '포트폴리오가 휴지통에 없습니다',
+  'parent' => '부모 포트폴리오',
+)
+) ); }
+
+------------------------------------------307p
+
+//포트폴리오 택소노미
+add_action('init', 'cptui_register_my_taxes_portfolio_category');
+function cptui_register_my_taxes_portfolio_category() {
+register_taxonomy( 'portfolio_category',array (
+  0 => 'portfolio',
+),
+array( 'hierarchical' => true,
+	'label' => '포트폴리오 카테고리',
+	'show_ui' => true,
+	'query_var' => true,
+	'show_admin_column' => true,
+	'labels' => array (
+  'search_items' => '포트폴리오 카테고리',
+  'popular_items' => '인기 포트폴리오',
+  'all_items' => '모든 포트폴리오',
+  'parent_item' => '부모 포트폴리오',
+  'parent_item_colon' => '부모 포트폴리오:',
+  'edit_item' => '포트폴리오 편집',
+  'update_item' => '포트폴리오 업데이트',
+  'add_new_item' => '새 포트폴리오 추가',
+  'new_item_name' => '새 포트폴리오 이름',
+  'separate_items_with_commas' => '포트폴리오를 콤마로 분리',
+  'add_or_remove_items' => '포트폴리오 추가 또는 제거',
+  'choose_from_most_used' => '가장 많이 사용한 것에서 선택',
+)
+) ); 
+}
+
+
+ 	/** 
+ 	* 글 타입 가져오기 
+ 	*/ 
+ 	require get_stylesheet_directory() . '/code-block/inc_custom-posttype.php'; 
+
+
+-----------------------------------------------------309p
+
+ 	function add_menu_icons_styles(){ ?> 
+ 	<style> 
+ 	#menu-posts-movie .dashicons-admin-post:before { content: "\f337"; } 
+ 	#menu-posts-portfolio .dashicons-admin-post:before { content: "\f322"; } 
+ 	#menu-posts-gallery .dashicons-admin-post:before { content: "\f233"; } 
+ 	#menu-posts-team .dashicons-admin-post:before { content: "\f110"; } 
+ 	#menu-posts-about .dashicons-admin-post:before { content: "\f116"; } 
+ 	#menu-posts-gridblog .dashicons-admin-post:before { content: "\f495"; } 
+ 	#menu-posts-slider .dashicons-admin-post:before { content: "\f233"; } 
+ 	</style> 
+ 	<?php } 
+ 	add_action( 'admin_head', 'add_menu_icons_styles' ); 
+
+
+
+single-portfolio.php 파일 만들기-------------------------314p
+
+ 	get_template_part( 'portfolio/content', 'portfolio' ); 
+
+
+
+
+ 	  <div class="entry-content">  
+ 	    <div class="row"> 
+ 	      <div class="col-md-2"> 
+ 	        
+ 	      </div> 
+ 	      <div class="col-me-2"> 
+ 	        
+ 	      </div> 
+ 	      <div class="col-md-8"> 
+ 	        
+ 	      </div> 
+ 	    </div> 
+
+
+
+
+    <div class="col-md-2"> 
+      <?php if ( get_field('portfolio_team') ) : ?> 
+      <p><i class="fa fa-users"></i> 팀 이름:  <?php the_field('portfolio_team'); ?></p> 
+      <?php endif; ?>  
+
+
+------------------------------------------------316p
+
+@import url("//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css"); 
+
+
+
+ 	<div class="col-md-2"> 
+ 	  <?php if ( get_field('portfolio_team') ) : ?> 
+ 	  <p><i class="fa fa-users"></i> 팀 이름:  <?php the_field('portfolio_team'); ?></p> 
+ 	  <?php endif; ?>  
+ 	  <?php if ( get_field('portfolio_client') ) : ?> 
+ 	  <p><i class="fa fa-heartbeat"></i> 의뢰인:  <?php the_field('portfolio_client'); ?></p> 
+ 	  <?php endif; ?>  
+ 	  <?php if ( get_field('portfolio_others1') ) : ?> 
+ 	  <p><i class="fa fa-certificate"></i> 기타 1:  <?php the_field('portfolio_others1'); ?></p> 
+ 	  <?php endif; ?>  
+ 	  <?php if ( get_field('portfolio_others2') ) : ?> 
+ 	  <p><i class="fa fa-cog"></i> 기타 2:  <?php the_field('portfolio_others2'); ?></p> 
+ 	  <?php endif; ?>  
+ 	</div> 
+
+
+
+
+  <div class="col-md-8"> 
+    <?php if ( get_field('portfolio_description') ) : ?> 
+    <p><?php the_field('portfolio_description'); ?></p> 
+    <?php endif; ?>  
+  </div>
+
+
+
+
+ 	    <div class="row"> 
+ 	      <div class="col-md-12"> 
+ 	        <?php if ( get_field('portfolio_avatar') ) : ?> 
+ 	          <?php $image = get_field('portfolio_avatar'); 
+ 	          print_r($image);
+
+
+
+-------------------------------------------------318p
+
+ 	Array ( [id] => 58 [alt] => [title] => girl-flowers [caption] => [description] => [mime_type] => image/jpeg [url] => http://localhost/wordpress-bootstrap3/wp-content/uploads/2015/01/girl-flowers.jpg [width] => 4326 [height] => 2884 [sizes] => Array ( [thumbnail] => http://localhost/wordpress-bootstrap3/wp-content/uploads/2015/01/girl-flowers-150x150.jpg 
+
+
+
+
+  $size = 'thumbnail'; 
+  $thumb = $image['sizes'][ $size ];
+
+
+
+
+  <div class="col-md-2"> 
+    <?php if ( get_field('portfolio_avatar') ) : ?> 
+      <?php $image = get_field('portfolio_avatar'); 
+      //print_r($image); 
+      $size = 'thumbnail'; 
+      $thumb = $image['sizes'][ $size ]; ?> 
+      <img class="img-circle" src="<?php echo $thumb; ?>"> 
+
+
+
+
+  <?php else: ?>  
+    <img class="img-circle" src="<?php echo get_stylesheet_directory_uri() . '/images/avatar.jpg'; ?>" alt=""> 
+  <?php endif; ?>    
+</div>
+
+
+
+
+
+ 	<i class="fa fa-user portfolio-avatar img-circle"></i> 
+
+
+
+ 	.portfolio-avatar { background-color: #f9f9f9; font-size: 150px; padding: 15px 30px; color: rgba(37,120,233,0.6); } 
+
+
+
+-------------------------------------------------321p
+
+ 	// 이미지 사이즈 등록 
+ 	add_image_size( 'image_lft', '250', '155', true ); 
+ 	add_image_size( 'portfolio', '300', '0', true ); 
+ 	add_image_size( 'portfolio_fixed', '300', '200', true ); 
+
+
+
+
+
+<?php
+add_filter( 'attachments_default_instance', '__return_false' ); 
+  
+function gallery_attachments( $attachments ) 
+{ 
+  $fields         = array( 
+    array( 
+      'name'      => 'gallery_title',                         
+      'type'      => 'text',                          
+      'label'     => __( '제목', 'attachments' ),    
+      'default'   => '제목',                         
+    ), 
+    array( 
+      'name'      => 'gallery_caption',                       
+      'type'      => 'text',                      
+      'label'     => __( '캡션', 'attachments' ),  
+      'default'   => '캡션',                       
+    ), 
+  );
+
+  $args = array( 
+    'label'         => '첨부', 
+    'post_type'     => array( 'post', 'page', 'movie', 'portfolio', 'gallery', 'slider', 'team', 'carousel' ), 
+    'position'      => 'advanced', 
+    'priority'      => 'high', 
+    'filetype'      => null,  
+    'note'          => '여기에 파일을 첨부하세요!', 
+    'append'        => true, 
+    'button_text'   => __( '파일 첨부', 'attachments' ), 
+    'modal_text'    => __( '첨부', 'attachments' ), 
+    'router'        => 'browse', 
+    'post_parent'   => false, 
+    'fields'        => $fields, 
+  ); 
+  $attachments->register( 'gallery_attachments', $args ); 
+} 
+add_action( 'attachments_register', 'gallery_attachments' );
+
+
+
+
+
+ 	/** 
+ 	* 첨부 가져오기 
+ 	*/ 
+ 	require get_stylesheet_directory() . '/code-block/inc_attachment.php'; 
+
+
+---------------------------------------------------323p
+
+https://github.com/jchristopher/attachments/blob/master/docs/usage.md
+
+
+
+
+ 	<?php $attachments = new Attachments( '함수이름' ); ?> 
+ 	<?php if( $attachments->exist() ) : ?> 
+ 	  <h3>Attachments</h3> 
+ 	  <p>Total Attachments: <?php echo $attachments->total(); ?></p> 
+ 	  <ul> 
+ 	    <?php while( $attachments->get() ) : ?> 
+ 	      <li> 
+ 	        ID: <?php echo $attachments->id(); ?><br /> 
+ 	        Type: <?php echo $attachments->type(); ?><br /> 
+ 	        Subtype: <?php echo $attachments->subtype(); ?><br /> 
+ 	        URL: <?php echo $attachments->url(); ?><br /> 
+ 	        Image: <?php echo $attachments->image( 'thumbnail' ); ?><br /> 
+ 	        Source: <?php echo $attachments->src( 'full' ); ?><br /> 
+ 	        Size: <?php echo $attachments->filesize(); ?><br /> 
+ 	        Title Field: <?php echo $attachments->field( 'title' ); ?><br /> 
+ 	        Caption Field: <?php echo $attachments->field( 'caption' ); ?> 
+ 	      </li> 
+ 	    <?php endwhile; ?> 
+ 	  </ul> 
+ 	<?php endif; ?>
+
+
+
+
+
+ 	<?php $attachments = new Attachments( 'gallery_attachments' ); ?> 
+ 	<?php if( $attachments->exist() ) : ?> 
+ 	  <?php $my_index = 0; ?> 
+ 	  <?php if( $attachment = $attachments->get_single( $my_index ) ) : ?> 
+ 	    <h3>Attachment at index 0:</h3> 
+ 	    <pre><?php print_r( $attachment ); ?></pre> 
+ 	    <ul> 
+ 	      <li> 
+ 	        ID: <?php echo $attachments->id( $my_index ); ?><br /> 
+ 	        Type: <?php echo $attachments->type( $my_index ); ?><br /> 
+ 	        Subtype: <?php echo $attachments->subtype( $my_index ); ?><br /> 
+ 	        URL: <?php echo $attachments->url( $my_index ); ?><br /> 
+ 	        Image: <?php echo $attachments->image( 'thumbnail', $my_index ); ?><br /> 
+ 	        Source: <?php echo $attachments->src( 'full', $my_index ); ?><br /> 
+ 	        Size: <?php echo $attachments->filesize( $my_index ); ?><br /> 
+ 	        Width: <?php echo $attachments->width('thumbnail', $my_index ); ?><br /> 
+ 	        Height: <?php echo $attachments->height('thumbnail', $my_index ); ?><br /> 
+ 	        Title Field: <?php echo $attachments->field( 'title', $my_index ); ?><br /> 
+ 	        Caption Field: <?php echo $attachments->field( 'caption', $my_index ); ?> 
+ 	      </li> 
+ 	    </ul> 
+ 	  <?php endif; ?> 
+ 	<?php endif; ?>
+
+
+
+
+ 	  </div><!-- .entry-content --> 
+ 	    <?php $attachments = new Attachments( 'gallery_attachments' ); ?> 
+ 	    <?php if( $attachments->exist() ) : ?>     
+ 	        <div class="isotope-single"> 
+ 	          <ul class="row isotope"> 
+ 	          <?php while( $attachments->get() ) : ?> 
+ 	            <li class="thumbs col-md-3 p-all-0"> 
+ 	              <a rel="lightbox" href="<?php echo $attachments->src( 'full' ); ?>"> 
+ 	                <?php echo $attachments->image( 'portfolio_fixed' ); ?> 
+ 	              </a> 
+ 	            </li> 
+ 	          <?php endwhile; ?>  
+ 	          </ul> 
+ 	        </div> 
+ 	    <?php endif; ?> 
+ 	  <?php 
+ 	    // Author bio.
+
+
+------------------------------------------------325p
+
+ 	ul, ol { padding: 0; }  
+ 	article .isotope-single img { margin: 0; width:100%;}
+ 	.isotope-single { padding: 20px; }
+
+
+
+ 	@media (max-width: 499px) { 
+ 	  .thumbs.col-md-3 { width: 100%; } 
+ 	} 
+ 	@media (max-width: 767px) and (min-width: 500px) { 
+ 	  ... 
+ 	  .thumbs.col-md-3 { width: 50%; float: left; }  
+ 	}  
+ 	@media (min-width: 768px) { 
+ 	  .thumbs.col-md-3 { width: 50%; float: left; }  
+ 	}  
+ 	@media (min-width: 992px) { 
+ 	  .thumbs.col-md-3 { width: 33.333333%; } 
+ 	} 
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  .thumbs.col-md-3 { width: 25%; } 
+ 	}
+
+
+
+
+ 	<li class="thumbs col-md-4 p-all-0"> 
+
+
+
+
+ 	@media (max-width: 499px) { 
+ 	  .thumbs.col-md-4 { width: 100%; } 
+ 	} 
+ 	@media (max-width: 767px) and (min-width: 500px) { 
+ 	  ... 
+ 	  .thumbs.col-md-4 { width: 50%; float: left; }  
+ 	}  
+ 	@media (min-width: 768px) { 
+ 	  .thumbs.col-md-4 { width: 50%; float: left; }  
+ 	}  
+ 	@media (min-width: 992px) { 
+ 	  .thumbs.col-md-4 { width: 33.333333%; } 
+ 	} 
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  .thumbs.col-md-3 { width: 25%; } 
+ 	}
+
+
+-------------------------------------------------327p
+
+ 	<?php echo $attachments->image( 'portfolio' ); ?> 
+
+
+
+http://isotope.metafizzy.co/
+
+
+
+
+https://github.com/desandro/imagesloaded
+
+
+----------------------------------------------329p
+
+ 	  wp_enqueue_script('imagesloaded.pkgd.min-js', get_stylesheet_directory_uri() . '/js/imagesloaded.pkgd.min.js', array('jquery'), null, true); 
+ 	  wp_enqueue_script('isotope.pkgd.min-js', get_stylesheet_directory_uri() . '/js/isotope.pkgd.min.js', array('jquery'), null, true); 
+
+
+
+
+ 	  var $container = $('.isotope'); 
+ 	  $container.isotope({ 
+ 	    itemSelector: '.thumbs', 
+ 	    masonry: { 
+ 	      columnWidth: '.col-md-6, .col-md-4, .col-md-3' 
+ 	    } 
+ 	  }); 
+ 	  
+ 	  $container.imagesLoaded( function() { 
+ 	    $container.isotope('layout'); 
+ 	  }); 
+
+
+
+
+ 	  $('.isotope').isotope({ 
+ 	    itemSelector: '.thumbs', 
+ 	    masonry: { 
+ 	      columnWidth: '.col-md-6, .col-md-4, .col-md-3' 
+ 	    } 
+ 	  }); 
+ 	  
+ 	  $('.isotope').imagesLoaded( function() { 
+ 	    $('.isotope').isotope('layout'); 
+ 	  });
+
+
+
+
+----------------------------------------------332p
+
+ 	#colorbox, #colorbox button:focus, #cboxWrapper:focus {outline:none !important;} 
+
+
+
+
+ 	#cboxNext { text-indent: 0 !important; margin-top: 0 !important; top:0 !important; right: -200px !important; text-align: right; color: transparent !important; transition: .5s;} 
+ 	#cboxPrevious { text-indent: 0 !important; margin-top: 0 !important; top:0 !important; left: -200px !important; text-align: left; color: transparent !important; transition: .5s;} 
+
+
+
+
+ 	#cboxSlideshow { top:100% !important; margin-top:3px !important; color: transparent !important; } 
+
+
+
+
+ 	#cboxNext:after, #cboxPrevious:after, #cboxSlideshow:after { 
+ 	  font-size: 50px !important; 
+ 	  opacity: 0.5; 
+ 	  color: #fff !important; 
+ 	  display: inline-block; 
+ 	  font: normal normal normal 14px/1 FontAwesome; 
+ 	  font-size: inherit; 
+ 	  text-rendering: auto; 
+ 	  -webkit-font-smoothing: antialiased; 
+ 	} 
+ 	#cboxNext:after {  content: "\f054"; } 
+ 	#cboxPrevious:after {  content: "\f053"; } 
+ 	#cboxSlideshow:after { content: "\f04b";   font-size: 20px !important; } 
+
+
+
+
+ 	#cboxContent:hover #cboxNext { transition: .5s; right: 50px !important; } 
+ 	#cboxContent:hover #cboxPrevious { transition: .5s; left: 50px !important; } 
+
+
+
+Direction-Aware Hover Effect 제이쿼리 플러그인 사용하기----------334p
+
+http://tympanus.net/codrops/2012/04/09/direction-aware-hover-effect-with-css3-and-jquery/
+
+
+ 	  wp_enqueue_script('hoverdir-js', get_stylesheet_directory_uri() . '/js/jquery.hoverdir.js', array('jquery'), null, true); 
+ 	  wp_enqueue_script('modernizr-js', get_stylesheet_directory_uri() . '/js/modernizr.custom.97074.js', array('jquery'), null, true); 
+
+
+
+
+ 	/************ Direction-Aware Hover Effect **************/ 
+ 	.da-thumbs { position: relative; } 
+ 	.da-thumbs .thumbs { position: relative; }
+
+
+
+ 	.da-thumbs .thumbs a div { 
+ 	  position: absolute; 
+ 	  background: #333; 
+ 	  background: rgba(75,75,75,0.7); 
+ 	  width: 100%; 
+ 	  height: 100%; 
+ 	  left: -100%; 
+ 	}
+
+
+
+ 	.da-thumbs .thumbs a div span + span { 
+ 	  display: block; 
+ 	  padding: 10px 0; 
+ 	  margin: 0px 20px 10px 20px; 
+ 	  text-transform: uppercase; 
+ 	  font-weight: normal; 
+ 	  color: rgba(255,255,255,0.9); 
+ 	  text-shadow: 1px 1px 1px rgba(0,0,0,0.2); 
+ 	  border-bottom: 0px solid rgba(255,255,255,0.5); 
+ 	  box-shadow: 0 0px 0 rgba(0,0,0,0.1), 0 0px 0 rgba(255,255,255,0.3); 
+ 	}
+
+
+-------------------------------------------------336p
+
+ 	    <?php $attachments = new Attachments( 'gallery_attachments' ); ?> 
+ 	    <?php if( $attachments->exist() ) : ?>     
+ 	        <div class="isotope-single"> 
+ 	          <ul class="row isotope da-thumbs"> 
+ 	          <?php while( $attachments->get() ) : ?> 
+ 	            <li class="thumbs col-md-3 p-all-0"> 
+ 	              <a rel="lightbox" href="<?php echo $attachments->src( 'full' ); ?>"> 
+ 	                <?php echo $attachments->image( 'portfolio' ); ?> 
+ 	                <div> 
+ 	                  <span><?php echo $attachments->field( 'gallery_title' ); ?></span> 
+ 	                  <span><?php echo $attachments->field( 'gallery_caption' ); ?></span> 
+ 	                </div> 
+ 	              </a> 
+ 	            </li> 
+ 	          <?php endwhile; ?>  
+ 	          </ul> 
+ 	        </div> 
+ 	    <?php endif; ?>
+
+
+
+
+ 	// 호버디렉션 
+ 	$(' .da-thumbs > .thumbs ').each( function() { $(this).hoverdir(); } ); 
+
+
+사이드바 배치하기----------------------------337p
+
+ 	get_template_part( 'portfolio/content', 'portfolio' ); 
+ 	  
+ 	  
+  // Previous/next post navigation. 
+  the_post_navigation( array( 
+    ...) ); 
+// End the loop. 
+endwhile; 
+?> 
+  <div class="row"> 
+    <div class="col-md-8"> 
+      <?php // If comments are open or we have at least one comment, load up the comment template. 
+      if ( comments_open() || get_comments_number() ) : 
+        comments_template(); 
+      endif; ?> 
+    </div> 
+    <div id="sidebar2" class="col-md-4"> 
+      <div id="secondary" class="secondary"> 
+        <?php if ( is_active_sidebar( 'sidebar-3' ) ) : ?> 
+          <div id="widget-area" class="widget-area" role="complementary"> 
+            <?php dynamic_sidebar( 'sidebar-3' ); ?> 
+          </div><!-- .widget-area --> 
+        <?php endif; ?> 
+      </div> 
+    </div><!--#sidebar--> 
+  </div> 
+</main><!-- .site-main -->
+
+
+Ultimate Posts Widget 플러그인 사용하기--------------339p
+
+ 	#sidebar2 { margin-top: 25px; } 
+ 	.upw-posts .entry-image img { width: 70px; float: left; margin:0 15px 0 0; } 
+ 	.upw-posts article { margin-bottom: 5px !important; padding-bottom: 25px !important; } 
+
+
+
+page-portfolio.php 파일 만들기------------------342p
+
+ 	<?php 
+ 	/** 
+ 	* Template name: 포트폴리오 
+ 	* 
+ 	* @package WordPress 
+ 	* @subpackage Twenty_Fifteen 
+ 	* @since Twenty Fifteen 1.0 
+ 	*/ 
+ 	  
+ 	get_header(); ?> 
+ 	  
+ 	<div class="container-fluid p-all-0"> 
+ 	  <?php echo do_shortcode('[header_bar]'); ?>  
+ 	</div><!-- .container-fluid -->
+ 	  
+ 	<div class="container"> 
+
+
+
+----------------------------------------343p
+
+ 	get_template_part( 'portfolio/content', 'page_portfolio' ); 
+
+
+
+
+
+ 	  <?php 
+ 	  if (!is_page_template('page-side_right.php' ) && !is_page_template('page-side_left.php' )) : 
+ 	    // Post thumbnail. 
+ 	    twentyfifteen_post_thumbnail(); 
+ 	  endif; 
+ 	  ?> 
+ 	  
+ 	  <?php if (!is_page_template('page-side_right.php' ) && !is_page_template('page-side_left.php' )) : ?> 
+ 	  <header class="entry-header"> 
+ 	    <?php the_title( '<h1 class="entry-title">', '</h1>' ); ?> 
+ 	  </header><!-- .entry-header --> 
+ 	  <?php endif; ?>
+
+
+
+
+ 	  <div class="entry-content"> 
+ 	    <?php the_content(); ?> 
+
+
+
+
+
+ 	  <div class="entry-content"> 
+ 	    <ul id="portfolio-filter" class="list-inline m-btm-20 text-center"> 
+ 	      <?php 
+ 	          $terms = get_terms("portfolio_category"); 
+ 	          $count = count($terms); 
+ 	              echo '<li><a href="javascript:void(0)" title="" data-filter=".all" class="active btn btn-default">전체</a></li>'; 
+ 	          if ( $count > 0 ){ 
+ 	  
+ 	              foreach ( $terms as $term ) { 
+ 	  
+ 	                  $termname = strtolower($term->name); 
+ 	                  $termname = str_replace(' ', '-', $termname); 
+ 	                  echo '<li><a href="javascript:void(0)" title="" data-filter=".'.$termname.'" class="btn btn-default">'.$term->name.'</a></li>'; 
+ 	              } 
+ 	          } 
+ 	      ?> 
+ 	    </ul>  
+
+
+
+
+-----------------------------------------345p
+
+ 	    </ul>  
+ 	    <div id="portfolio" class="infinite no-touch"> 
+ 	    <?php 
+ 	       $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;  
+ 	       $args = array( 
+ 	         'post_type' => 'portfolio', 
+ 	         'posts_per_page' => 5,
+ 	         'paged'=>$paged 
+ 	       ); 
+ 	       $portfolio = new WP_Query( $args ); 
+ 	      if ( $portfolio->have_posts() ) : 
+ 	      while ( $portfolio->have_posts() ) : $portfolio->the_post(); 
+ 	  
+ 	       $terms = get_the_terms( $post->ID, 'portfolio_category' );            
+ 	            if ( $terms && ! is_wp_error( $terms ) ) : 
+ 	  
+ 	                $links = array(); 
+ 	  
+ 	                foreach ( $terms as $term ) { 
+ 	                    $links[] = $term->name; 
+ 	                } 
+ 	  
+ 	                $tax_links = join( " ", str_replace(' ', '-', $links));          
+ 	                $tax = strtolower($tax_links); 
+ 	            else :  
+ 	          $tax = '';          
+ 	            endif; ?>
+
+
+
+
+
+ 	            endif; ?> 
+ 	  
+ 	      <div class="all thumbs cs-style-3 col-md-3 <?php echo $tax; ?>"> 
+ 	        ...콘텐츠... 
+ 	      </div> 
+ 	      <?php endwhile; ?>
+ 	      <?php 
+ 	        wp_link_pages( array(... 
+ 	        ) ); 
+ 	      ?> 
+ 	    </div><!-- #portfolio --> 
+ 	   </div><!-- .entry-content --> 
+ 	  
+ 	      <?php wp_reset_postdata(); ?> 
+ 	  
+ 	    <?php else : ?> 
+ 	      <p><?php _e( 'Sorry, no posts matched your criteria.' ); ?></p> 
+ 	    <?php endif; ?> 
+ 	  
+ 	  <nav> 
+ 	    <ul id="portfolio-pager" class="pager"> 
+ 	      <li class="previous"><?php previous_posts_link( '&laquo; 이전', $portfolio->max_num_pages) ?></li> 
+ 	      <li class="next"><?php next_posts_link( '다음 &raquo;', $portfolio->max_num_pages) ?></li> 
+ 	    </ul> 
+ 	  </nav>
+
+
+콘텐츠 레이아웃 만들기---------------------------------347p
+
+http://tympanus.net/codrops/2013/06/18/caption-hover-effects/
+
+
+
+  <div class="all thumbs cs-style-3 col-md-3 <?php echo $tax; ?>"> 
+    <div> 
+      <figure> 
+        <?php the_post_thumbnail('portfolio'); ?> 
+        <figcaption> 
+          <span><?php the_title(); ?></span> 
+          <a href="<?php echo get_permalink(); ?>">더 보기</a> 
+        </figcaption>  
+      </figure>  
+    </div>  
+  </div> 
+  <?php endwhile; ?>
+
+
+
+
+
+
+ 	wp_enqueue_script('toucheffects-js', get_stylesheet_directory_uri() . '/js/toucheffects.js', array('jquery'), null, true); 
+
+
+
+
+ 	/*Caption Hover Effects*/ 
+ 	.thumbs { 
+ 	/*  padding: 20px 20px 100px 20px; 
+ 	  max-width: 1300px; 
+ 	  margin: 0 auto; 
+ 	  list-style: none; 
+ 	  text-align: center;*/ 
+ 	} 
+ 	  
+ 	.thumbs div { 
+ 	/*  display: inline-block; 
+ 	  width: 440px; 
+ 	  margin: 0; 
+ 	  padding: 20px; 
+ 	  text-align: left;*/ 
+ 	  position: relative; 
+ 	}
+
+
+
+
+ 	.thumbs figcaption span:before { 
+ 	  content: 'by '; 
+ 	}
+
+
+
+ 	@media screen and (max-width: 31.5em) { 
+ 	  .thumbs { 
+ 	    padding: 10px 10px 10px 10px; 
+ 	  }
+
+
+
+ 	  var $container2 = $('#portfolio'); 
+ 	  $container2.isotope({ 
+ 	    itemSelector: '.thumbs', 
+ 	    masonry: { 
+ 	      columnWidth: '.col-md-6, .col-md-4, .col-md-3' 
+ 	    } 
+ 	  }); 
+ 	  
+ 	  $container2.imagesLoaded( function() { 
+ 	    $container2.isotope('layout'); 
+ 	  });
+
+
+
+ 	  $('#portfolio-filter a').click(function(){ 
+ 	    $('#portfolio-filter a.active').removeClass('active'); 
+ 	    var selector = $(this).attr('data-filter'); 
+ 	    $container2.isotope({ filter: selector, animationEngine : "css" }); 
+ 	    $(this).addClass('active'); 
+ 	    return false; 
+ 	  });
+
+
+무한 스크롤 기능 추가하기----------------------------351p
+
+https://github.com/paulirish/infinite-scroll
+
+
+
+
+ 	wp_enqueue_script('jquery.infinitescroll.min-js', get_stylesheet_directory_uri() . '/js/jquery.infinitescroll.min.js', array('jquery'), null, true); 
+ 	  
+
+
+
+ 	  var $container3 = $('.infinite'); 
+ 	  $container3.infinitescroll({ 
+ 	    navSelector  : '.pager',    
+ 	    nextSelector : '.pager a', 
+ 	    itemSelector : '.thumbs',     
+ 	    loading: { 
+ 	        finishedMsg: '<em>페이지가 더 이상 없습니다</em>', 
+ 	        msgText : "", 
+ 	        img: 'http://i.imgur.com/6RMhx.gif' 
+ 	      } 
+ 	    }, 
+ 	    function(newElements) { 
+ 	      var $newElems = $(newElements); 
+ 	      $newElems.imagesLoaded(function(){ 
+ 	        $container3.isotope('appended', $newElems ); 
+ 	      }); 
+ 	    } 
+ 	  );
+
+
+
+
+ 	/* Infinite Scroll loader */ 
+ 	#infscr-loading { 
+ 	  text-align: center; 
+ 	  z-index: 100; 
+ 	  position: fixed; 
+ 	  left: 45%; 
+ 	  bottom: 330px; 
+ 	  width: 220px; 
+ 	  padding: 10px; 
+ 	  background: #000; 
+ 	  opacity: 0.8; 
+ 	  color: #FFF; 
+ 	  -webkit-border-radius: 3px; 
+ 	     -moz-border-radius: 3px; 
+ 	          border-radius: 3px; 
+ 	} 
+ 	#infscr-loading img { 
+ 	  width:70px !important; 
+ 	}  
+
+
+
+
+브레드크럼 사용하기---------------------------------354p
+
+ 	function header_bar_with_title_and_bg() { 
+ 	    $src = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID), array( 10000,10000 ) ); ?> 
+ 	  <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 30px;" data-stellar-background-ratio="0.5"> 
+ 	    <h1><?php the_title(); ?></h1> 
+ 	    <?php if(function_exists('bcn_display')): ?> 
+ 	      <div class="breadcrumbs"> 
+ 	        <?php bcn_display(); ?> 
+ 	      </div> 
+ 	    <?php endif ?> 
+ 	  </div> <?php 
+ 	}
+
+
+
+
+ 	.breadcrumbs, .breadcrumbs a { font-size: 16px; color: #fff; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); } 
+
+
+
+옵션 프레임워크 사용하기-------------------------------357p
+
+https://github.com/devinsays/options-framework-plugin
+
+
+
+
+
+
+ 	  $themename = get_option( 'stylesheet' ); 
+ 	  $themename = preg_replace("/\W/", "_", strtolower($themename) ); 
+
+
+
+
+ 	  // If using image radio buttons, define a directory path 
+ 	  $imagepath =  get_template_directory_uri() . '/images/'; 
+
+
+
+
+
+ 	  $options[] = array( 
+ 	    'name' => __('포트폴리오 페이지당 글 수 변경', 'options_check'), 
+ 	    'desc' => __('포트폴리오 페이지에서 한 페이지당 나타날 글 수.', 'options_check'), 
+ 	    'id' => 'portfolio_post_num', 
+ 	    'std' => '10', 
+ 	    'type' => 'text');
+
+
+------------------------------------------359p
+
+  <?php 
+     $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;  
+     $args = array( 
+       'post_type' => 'portfolio', 
+       'posts_per_page' => of_get_option('portfolio_post_num', '입력 값이 없습니다' ), 
+       'paged'=>$paged
+
+
+
+
+ 	  $options[] = array( 
+ 	    'name' => __('Input Select Small', 'options_check'), 
+ 	    'desc' => __('Small Select Box.', 'options_check'), 
+ 	    'id' => 'example_select', 
+ 	    'std' => 'three', 
+ 	    'type' => 'select', 
+ 	    'class' => 'mini', //mini, tiny, small 
+ 	    'options' => $test_array); 
+ 	  
+ 	  $options[] = array( 
+ 	    'name' => __('포트폴리오 마우스오버 효과', 'options_check'), 
+ 	    'desc' => __('포트폴리오 마우스오버 효과.', 'options_check'), 
+ 	    'id' => 'seven_effects', 
+ 	    'std' => 'three', 
+ 	    'type' => 'select', 
+ 	    'class' => 'mini', //mini, tiny, small 
+ 	    'options' => $seven_effects_array);
+
+
+
+
+
+ 	  // Test data 
+ 	  $test_array = array( 
+ 	    'one' => __('One', 'options_check'), 
+ 	    'two' => __('Two', 'options_check'), 
+ 	    'three' => __('Three', 'options_check'), 
+ 	    'four' => __('Four', 'options_check'), 
+ 	    'five' => __('Five', 'options_check') 
+ 	  ); 
+ 	  
+ 	  // seven_effects data 
+ 	  $seven_effects_array = array( 
+ 	    'cs-style-1' => __('One', 'options_check'), 
+ 	    'cs-style-2' => __('Two', 'options_check'), 
+ 	    'cs-style-3' => __('Three', 'options_check'), 
+ 	    'cs-style-4' => __('Four', 'options_check'), 
+ 	    'cs-style-5' => __('Five', 'options_check'), 
+ 	    'cs-style-6' => __('Six', 'options_check'), 
+ 	    'cs-style-7' => __('Seven', 'options_check'), 
+ 	  );
+
+
+
+
+  <div class="all thumbs <?php echo of_get_option('seven_effects', '입력 항목이 없습니다' ); ?> col-md-3 <?php echo $tax; ?>"> 
+    <div> 
+      <figure>
+
+
+
+---------------------------------------------361p
+
+ 	  $options[] = array( 
+ 	    'name' => __('Style Settings', 'options_check'), 
+ 	    'type' => 'heading'); 
+ 	  // 스타일 설정 옵션 시작 
+ 	  
+ 	  $options[] = array( 
+ 	    'name' => __('Advanced Settings', 'options_check'), 
+ 	    'type' => 'heading');
+
+
+
+
+
+ 	// Style Settings 
+ 	  $options[] = array( 
+ 	    'name' => __('Style Settings', 'options_check'), 
+ 	    'type' => 'heading'); 
+ 	  // 스타일 설정 옵션 시작 
+ 	  $options[] = array( 
+ 	    'name' =>  __('사이트 배경', 'options_check'), 
+ 	    'desc' => __('사이트 배경 설정.', 'options_check'), 
+ 	    'id' => 'site_background', 
+ 	    'std' => $site_background_defaults, 
+ 	    'type' => 'background' );
+
+
+
+
+
+ 	  // Background Defaults 
+ 	  $background_defaults = array( 
+ 	    'color' => '', 
+ 	    'image' => '', 
+ 	    'repeat' => 'repeat', 
+ 	    'position' => 'top center', 
+ 	    'attachment'=>'scroll' ); 
+ 	  
+ 	  // Site Background Defaults 
+ 	  $site_background_defaults = array( 
+ 	    'color' => '#f5f5f5', 
+ 	    'image' => '', 
+ 	    'repeat' => 'repeat', 
+ 	    'position' => 'top center', 
+ 	    'attachment'=>'scroll' );
+
+
+
+
+ 	<?php get_template_part('code-block/theme', 'option'); ?> 
+ 	<body <?php body_class(); ?>>
+
+
+
+
+
+ 	<?php 
+ 	    $background = of_get_option('site_background'); 
+ 	    if ($background['color'] || $background['image']) { 
+ 	        echo '<style type="text/css" >'; 
+ 	        echo 'body {'; 
+ 	        if ($background['color']) {   
+ 	            echo ' 
+ 	            background-color: ' .$background['color']. ';'; 
+ 	        } 
+ 	  
+ 	        if ($background['image']) { 
+ 	            echo ' 
+ 	            background: url('.$background['image']. ') '; 
+ 	            echo ''.$background['repeat']. ' '; 
+ 	            echo ''.$background['position']. ' '; 
+ 	            echo ''.$background['attachment']. ';'; 
+ 	        } 
+ 	        echo '}'; 
+ 	
+ 	        echo '</style>'; 
+ 	    } 
+ 	?> 
+
+
+
+
+
+ 	/*body { background: url(images/egg_shell.png), no-repeat; }*/ 
+ 	#page {  background-color: #fff; } 
+ 	@media (min-width: 1200px) { 
+ 	  #page {  width: 1170px;   margin: 0 auto;  border-left: 1px solid #ccc; border-right: 1px solid #ccc; } 
+ 	}
+
+
+-------------------------------------------------365p
+
+ 	  $options[] = array( 
+ 	    'name' => __( '레이아웃', 'options_check' ), 
+ 	    'desc' => __( '사이트 레이아웃', 'options_check' ), 
+ 	    'id' => 'site_layout', 
+ 	    'std' => 'box', 
+ 	    'type' => 'radio', 
+ 	    'options' => array( 
+ 	    'box' => __( '박스', 'options_check' ), 
+ 	    'wide' => __( '와이드', 'options_check' ), 
+ 	    'none' => __( '없음', 'options_check' ) 
+ 	    ) 
+ 	  );
+
+
+
+
+
+ 	    echo '</style>'; 
+ 	  }    
+ 	  $site_layout = of_get_option('site_layout'); 
+ 	   if ($site_layout) { 
+ 	     echo '<style type="text/css" >'; 
+ 	     if ($site_layout == 'box' ) {   
+ 	       echo ' 
+ 	        #page {  background-color: #fff; } 
+ 	        @media (min-width: 1200px) { 
+ 	        #page {  width: 1170px;   margin: 0 auto;  border-left: 1px solid #ccc; border-right: 1px solid #ccc; } 
+ 	        } 
+ 	       '; 
+ 	     } 
+ 	  
+ 	     if ($site_layout == 'wide') { 
+ 	       echo ' 
+ 	       body { background: #fff; } 
+ 	       #page {  width: 100%; background-color: #fff; } 
+ 	       '; 
+ 	     } 
+ 	     if ($site_layout == 'none') { 
+ 	       echo ''; 
+ 	     } 
+ 	     echo '</style>';   
+ 	  } 
+ 	?>
+
+
+
+
+갤러리 이미지 만들기-----------------------------------368p
+
+ 	// 이미지 사이즈 등록 
+ 	add_image_size( 'image_lft', '250', '155', true ); 
+ 	add_image_size( 'portfolio', '300', '0', true ); 
+ 	add_image_size( 'portfolio_fixed', '300', '200', true ); 
+ 	add_image_size( 'slider', '1170', '658', true );
+
+
+
+ 
+http://flexslider.woothemes.com/
+
+
+
+
+
+
+ 	  wp_enqueue_script('jquery.flexslider.min-js', get_stylesheet_directory_uri() . '/js/jquery.flexslider-min.js', array('jquery'), null, true); 
+
+
+
+템플릿 파일 수정하기----------------------------------369p
+
+
+ 	get_template_part( 'gallery/content', 'gallery' ); 
+
+
+
+
+  <div id="sidebar2" class="col-md-4"> 
+    <div id="secondary" class="secondary"> 
+      <?php if ( is_active_sidebar( 'sidebar-4' ) ) : ?> 
+        <div id="widget-area" class="widget-area" role="complementary"> 
+          <?php dynamic_sidebar( 'sidebar-4' ); ?> 
+        </div><!-- .widget-area --> 
+      <?php endif; ?> 
+    </div> 
+  </div><!--#sidebar-->
+
+
+
+
+  <div class="entry-content"> 
+  
+    <?php $attachments = new Attachments( 'gallery_attachments' ); /* pass the instance name */ ?> 
+    <?php if( $attachments->exist() ) : ?>     
+      <section class="slider"> 
+        <div id="gallery-slider" class="flexslider"> 
+          <ul class="slides"> 
+          <?php while( $attachments->get() ) : ?> 
+            <li data-thumb="<?php echo $attachments->src('thumbnail'); ?>"> 
+              <?php echo $attachments->image( 'slider' ); ?> 
+            </li> 
+          <?php endwhile; ?>  
+          </ul> 
+        </div> 
+      </section> 
+    <?php endif; ?>
+
+
+
+
+
+ 	// 플렉스 플라이더 
+ 	$('#gallery-slider').flexslider({ 
+ 	  animation: "slide", 
+ 	  slideshow: false, 
+ 	  slideshowSpeed: 3000, 
+ 	  controlNav: "thumbnails" 
+ 	});
+
+
+
+
+http://www.woothemes.com/flexslider/
+
+
+
+스타일 수정-----------------------------371p
+
+ .flex-control-thumbs li { width: 10%; }
+ .flex-direction-nav a.flex-next:before { font-family: FontAwesome; content:
+"\f054"; }
+ .flex-direction-nav a:before { font-family: FontAwesome;
+ content: "\f053"; }
+ article #gallery-slider img { margin: 0; }
+ .flexslider {
+ margin: 0 0 40px;
+ background: #fff;
+ border: 4px solid #fff;
+ position: relative;
+ -webkit-border-radius: 0px;
+ -moz-border-radius: 0px;
+ -o-border-radius: 0px;
+ border-radius: 0px;
+ -webkit-box-shadow: 0 0px 0px rgba(0,0,0,.2);
+ -moz-box-shadow: 0 0px 0px rgba(0,0,0,.2);
+ -o-box-shadow: 0 0px 0px rgba(0,0,0,.2);
+ box-shadow: 0 0px 0px rgba(0,0,0,.2);
+ zoom: 1;
+}
+
+
+
+프리로더 사용하기----------------------------------373p
+
+
+https://ihatetomatoes.net/create-custom-preloading-screen/
+
+
+
+<div id="loader-wrapper"> 
+  <div id="loader"></div> 
+  <div class="loader-section section-left"></div> 
+  <div class="loader-section section-right"></div> 
+</div> 
+
+
+
+// 프리로더 
+$(window).load(function(){ 
+     $('#loader-wrapper').fadeOut(1000); 
+});
+
+
+
+
+갤러리 페이지 만들기---------------------------------374p
+
+ 	<div class="entry-content"> 
+  <ul id="gallery-filter" class="list-inline m-btm-20 text-center"> 
+    <?php 
+        $terms = get_terms("gallery_category");
+
+
+
+ 	'posts_per_page' => of_get_option('gallery_post_num', 'no entry' ) 
+
+
+
+
+ 	  $options[] = array( 
+ 	    'name' => __('갤러리 페이지당 글 수 변경', 'options_check'), 
+ 	    'desc' => __('갤러리 페이지에서 한 페이지당 나타날 글 수.', 'options_check'), 
+ 	    'id' => 'gallery_post_num', 
+ 	    'std' => '10', 
+ 	    'type' => 'text');
+
+
+  <div class="all thumbs <?php echo of_get_option('seven_effects2', 'no entry' ); ?> col-md-3 <?php echo $tax; ?>"> 
+
+
+
+ 	  $options[] = array( 
+ 	    'name' => __('갤러리 마우스오버 효과', 'options_check'), 
+ 	    'desc' => __('갤러리 마우스오버 효과.', 'options_check'), 
+ 	    'id' => 'seven_effects2', 
+ 	    'std' => 'three', 
+ 	    'type' => 'select', 
+ 	    'class' => 'mini', //mini, tiny, small 
+ 	    'options' => $seven_effects_array); 
+
+
+
+
+ 	* Template name: 갤러리 
+
+
+
+
+ 	get_template_part( 'gallery/content', 'page_gallery' ); 
+
+
+
+
+
+ 	//포트폴리오 아이소톱 
+ 	  var $container4 = $('#gallery'); 
+ 	  $container4.isotope({ 
+ 	    itemSelector: '.thumbs', 
+ 	    masonry: { 
+ 	      columnWidth: '.col-md-6, .col-md-4, .col-md-3' 
+ 	    } 
+ 	  }); 
+ 	  
+ 	  $container4.imagesLoaded( function() { 
+ 	    $container4.isotope('layout'); 
+ 	  }); 
+ 	  
+ 	  $('#gallery-filter a').click(function(){ 
+ 	    $('#gallery-filter a.active').removeClass('active'); 
+ 	    var selector = $(this).attr('data-filter'); 
+ 	    $container4.isotope({ filter: selector, animationEngine : "css" }); 
+ 	    $(this).addClass('active'); 
+ 	    return false; 
+ 	  });
+
+
+
+슬라이더 글 타입 만들기------------------------------------378p
+
+
+http://nicinabox.com/superslides/
+
+
+
+
+
+ 	 // wp_enqueue_script('jquery.hammer.min-js', get_stylesheet_directory_uri() . '/js/hammer.min.js', array('jquery'), null, true); 
+ 	 // wp_enqueue_script('jquery.animate-enhancemed.min-js', get_stylesheet_directory_uri() . '/js/jquery.animate-enhancemed.min.js', array('jquery'), null, true); 
+ 	  wp_enqueue_script('jquery.easing-js', get_stylesheet_directory_uri() . '/js/jquery.easing.1.3.js', array('jquery'), null, true); 
+ 	  wp_enqueue_script('jquery.superslides.min-js', get_stylesheet_directory_uri() . '/js/jquery.superslides.min.js', array('jquery'), null, true); 
+
+
+
+ 	<?php get_header(); ?> 
+ 	  
+ 	    <?php $attachments = new Attachments( 'gallery_attachments' ); ?> 
+ 	    <?php if( $attachments->exist() ) : ?> 
+ 	    <div id="slides"> 
+ 	      <ul class="slides-container"> 
+ 	        <?php while( $attachments->get() ) : ?> 
+ 	        <li> 
+ 	          <?php echo $attachments->image( 'slider' ); ?> 
+ 	          <div class="carousel-caption"> 
+ 	            <h3><?php echo $attachments->field( 'gallery_title' ); ?></h3> 
+ 	            <p><?php echo $attachments->field( 'gallery_caption' ); ?></p> 
+ 	          </div> 
+ 	        </li> 
+ 	        <?php endwhile; ?> 
+ 	      </ul> 
+ 	      <nav class="slides-navigation"> 
+ 	        <a class="left carousel-control prev" href="#prev" role="button" data-slide="prev"> 
+ 	          <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span> 
+ 	          <span class="sr-only">Previous</span> 
+ 	        </a> 
+ 	        <a class="right carousel-control next" href="#next" role="button" data-slide="next"> 
+ 	          <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span> 
+ 	          <span class="sr-only">Next</span> 
+ 	        </a>    
+ 	      </nav> 
+ 	    </div> 
+ 	    <?php endif; ?> 
+ 	  
+ 	<?php get_footer(); ?> 
+
+
+
+
+ 	// 수퍼 슬라이드 
+ 	$('#slides').superslides({ 
+ 	  animation: 'fade', 
+ 	  play: 3000, 
+ 	  slide_easing: 'easeInOutCubic', 
+ 	  pagination: true, 
+ 	});
+
+
+
+http://gsgd.co.uk/sandbox/jquery/easing/
+
+
+
+https://github.com/nicinabox/superslides
+
+
+
+전면 페이지 만들기------------------------------382p
+
+ 	/** 
+ 	* 전면 페이지 
+ 	* 
+ 	* @package WordPress 
+ 	* @subpackage Twenty_Fifteen 
+ 	* @since Twenty Fifteen 1.0 
+ 	*/ 
+ 	  
+ 	get_header("wide"); ?> 
+ 	  
+ 	<div id="front-page" class="content-area"> 
+ 	  <main id="main" class="site-main" role="main"> 
+ 	   ... 
+ 	  </main> 
+ 	</div> 
+ 	  
+ 	<?php get_footer(); ?>
+
+
+
+
+
+ 	<?php $attachments = new Attachments( 'gallery_attachments', '236' ); ?> 
+ 	<?php if( $attachments->exist() ) : ?> 
+ 	<div id="slides"> 
+ 	  ... 
+ 	</div> 
+ 	<?php endif; ?>
+
+
+
+
+ 	<div id="front-page" class="content-area"> 
+ 	  <main id="main" class="site-main" role="main"> 
+ 	    <div id="front-home" class="container-fluid p-all-0"> 
+ 	      <?php get_template_part('code-block/front', 'slider'); ?> 
+ 	    </div> 
+ 	  </main> 
+ 	</div>
+
+
+
+전면 페이지 헤더-----------------------------------------384p
+
+ 	<body id="wide" <?php body_class(); ?>> 
+ 	<div class="visible-lg-block"> 
+ 	  <a href="#" rel="<?php echo esc_url( get_stylesheet_directory_uri() ); ?>/style-wide.css" class="btn btn-default wide-box wide">와이드</a> 
+ 	  <a href="#" rel="<?php echo esc_url( get_stylesheet_directory_uri() ); ?>/style-box.css" class="btn btn-default wide-box box">박스</a>
+
+
+
+
+ 	<div id="main-menu" class="container-fluid p-all-0"> 
+ 	  <nav class="navbar navbar-default bdr-0"> 
+ 	    <div class="container-fluid">
+
+
+
+
+
+ 	<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-2">
+
+
+
+
+
+  wp_nav_menu( array( 
+      'menu'              => 'secondary', 
+      'theme_location'    => 'secondary', 
+      'depth'             => 1, 
+      'container'         => 'div', 
+      'container_class'   => 'collapse navbar-collapse ', 
+'container_id'      => 'navbar-collapse-2',
+
+
+스타일 수정----------------------------------------385p
+
+
+	.navbar-default { opacity: 0.9; } 
+ 	.home #main-menu { position: fixed; top: 32px; left: 0; z-index: 10; width: 100%;} 
+
+
+
+#wide	.slides-pagination { bottom: 100px; } 
+
+
+
+
+ 	@media (max-width: 499px) { 
+ 	  ... 
+ 	  #slides .carousel-caption {  bottom: 44%; } 
+ 	  #slides .carousel-caption h3 {   font-size: 2em; } 
+ 	  #slides .carousel-caption p {  font-size: 1em; } 
+ 	} 
+ 	@media (max-width: 767px) and (min-width: 500px) { 
+ 	  ...  
+ 	  #slides .carousel-caption {  bottom: 46%; } 
+ 	  #slides .carousel-caption h3 {   font-size: 2em; } 
+ 	  #slides .carousel-caption p {  font-size: 1em; } 
+ 	  
+ 	}  
+ 	@media (min-width: 768px) { 
+ 	  ... 
+ 	  #slides .carousel-caption {  bottom: 42%; } 
+ 	  #slides .carousel-caption h3 {   font-size: 3em; } 
+ 	  #slides .carousel-caption p {  font-size: 2em; } 
+ 	}  
+ 	@media (min-width: 992px) { 
+ 	  ... 
+ 	  #slides .carousel-caption {  bottom: 40%; } 
+ 	  #slides .carousel-caption h3 {   font-size: 4em; } 
+ 	  #slides .carousel-caption p {  font-size: 2.5em; } 
+ 	} 
+ 	  
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  #slides .carousel-caption {  bottom: 40%; } 
+ 	  #slides .carousel-caption h3 {   font-size: 5em; } 
+ 	  #slides .carousel-caption p {  font-size: 3em; } 
+ 	}
+
+
+
+
+
+ 	@media (min-width: 1200px) { 
+ 	  #page {  width: 1170px;   margin: 0 auto;  border-left: 1px solid #ccc; border-right: 1px solid #ccc; } 
+ 	  #wide #page {  width: 100%;   margin: 0 auto;  border-left: 0px solid #ccc; border-right: 0px solid #ccc; } 
+ 	}
+
+
+포트폴리오 코드 블록 추가----------------------------------387p
+
+
+ 	<article> 
+    <ul id="portfolio-filter" class="list-inline m-btm-20 text-center"> 
+      <?php 
+          $terms = get_terms("portfolio_category"); 
+          ... 
+      ?> 
+    </ul>  
+    <div id="portfolio" class="infinite no-touch"> 
+    <?php 
+       ..., 
+         'posts_per_page' => 8, 
+         'paged'=>$paged 
+       ); 
+       ... 
+
+      <?php endwhile; endif; ?> 
+    </div><!-- #portfolio -->  
+  </article>
+
+
+
+
+ 	    </div><!-- 슬라이더 --> 
+ 	    <div id="front-portfolio" class="container-fluid p-all-0"> 
+ 	      <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(125), array( 10000,10000 ) ); ?> 
+ 	      <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+ 	        <div class="container get_excerpt"> 
+ 	          <h1><?php echo get_the_title(125); ?></h1> 
+ 	          <p><?php echo get_excerpt_by_id(125); ?></p> 
+ 	        </div> 
+ 	      </div> 
+ 	      <div class="container p-all-0"> 
+ 	        <?php get_template_part('code-block/front', 'portfolio'); ?> 
+ 	      </div> 
+ 	    </div>  
+ 	  </main>
+
+
+
+
+ 	    <div id="front-gallery" class="container-fluid p-all-0 m-top-30"> 
+ 	      <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(207), array( 10000,10000 ) ); ?> 
+ 	      <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+ 	        <div class="container get_excerpt"> 
+ 	          <h1><?php echo get_the_title(207); ?></h1> 
+ 	          <p><?php echo get_excerpt_by_id(207); ?></p> 
+ 	        </div> 
+ 	      </div> 
+ 	      <div class="container p-all-0"> 
+ 	        <?php get_template_part('code-block/front', 'gallery'); ?> 
+ 	      </div> 
+ 	    </div>
+
+
+
+부트스트랩 스크롤 스파이 이용하기-------------------------390p
+
+
+ 	<body id="wide" data-spy="scroll" data-offset="200" <?php body_class(); ?>> 
+
+
+
+
+ 	$(".home .navbar ul li a[href^='#']").click(function(e) { 
+ 	    e.preventDefault(); 
+ 	     
+ 	    var goto = $(this).attr('href'); 
+ 	  if ($('body').hasClass('admin-bar')) { 
+ 	    $('html, body').animate({ 
+ 	        scrollTop: $(goto).offset().top -83 
+ 	    }, 1000); 
+ 	  } else { 
+ 	    $('html, body').animate({ 
+ 	        scrollTop: $(goto).offset().top -50 
+ 	    }, 1000); 
+ 	  }  
+ 	});
+
+
+
+page-team.php 파일 만들기--------------------------395p
+
+
+ 	<?php 
+ 	/** 
+ 	* Template name: 팀 
+ 	* 
+ 	* @package WordPress 
+ 	*/
+ 	
+
+  <?php 
+  // Start the loop. 
+  while ( have_posts() ) : the_post(); ?> 
+
+    // Include the page content template. 
+    get_template_part( 'portfolio/content', 'page_portfolio' ); 
+
+  <?php  // If comments are open or we have at least one comment, load up the comment template. 
+    if ( comments_open() || get_comments_number() ) : 
+      comments_template();
+
+
+
+
+ 	<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>> 
+ 	... 
+ 	</article><!-- #post-## -->
+
+
+
+
+  <div class="entry-content"> 
+    <ul id="portfolio-filter" class="list-inline m-btm-20 text-center"> 
+      ... 
+    </ul>  
+    <div id="portfolio" class="infinite no-touch"> 
+
+
+
+
+    if ( $portfolio->have_posts() ) : 
+    while ( $portfolio->have_posts() ) : $portfolio->the_post(); ?> 
+
+     $terms = get_the_terms( $post->ID, 
+     ...        
+          endif; ?> 
+
+    <div class="all thumbs <?php echo of_get_option('    " 
+
+
+
+
+    <?php endwhile; ?> 
+    
+    <?php 
+      wp_link_pages( array( 
+        'before'      => '<div class="page-links"><span class="page-links-title">' . __( 'Pages:', 'twentyfifteen' ) . '</span>', 
+        'after'       => '</div>', 
+        'link_before' => '<span>', 
+        'link_after'  => '</span>', 
+        'pagelink'    => '<span class="screen-reader-text">' . __( 'Page', 'twentyfifteen' ) . ' </span>%', 
+        'separator'   => '<span class="screen-reader-text">, </span>', 
+      ) ); 
+    ?> 
+
+  </div><!-- #portfolio -->
+
+
+
+
+
+ 	<div class="all thumbs <?php echo of_get_option('seven_effects', 'no entry' ); ?> col-md-3 <?php echo $tax; ?>"> 
+
+
+---------------------------------------------------397p
+
+
+http://tympanus.net/codrops/2013/03/19/thumbnail-grid-with-expanding-preview/
+
+
+
+
+
+ 	<script src="<?php bloginfo('stylesheet_directory');?>/js/modernizr.custom.js"></script> 
+ 	<script src="<?php bloginfo('stylesheet_directory');?>/js/grid.js"></script> 
+	<script> 
+	  $(function() { 
+	    Grid.init(); 
+	  }); 
+	</script>
+
+
+
+
+ 	  Preview.prototype = { 
+ 	    create : function() { 
+ 	      // create Preview structure: 
+ 	      this.$title = $( '<h3></h3>' ); 
+ 	      this.$description = $( '<p></p>' ); 
+ 	      this.$area = $( '<p></p>' ); 
+ 	      this.$tweeter = $( '<p></p>' ); 
+ 	      this.$href = $( '<a href="#">웹사이트</a>' ); 
+ 	      this.$details = $( '<div class="og-details"></div>' ).append( this.$title, this.$area, this.$tweeter, this.$description, this.$href ); 
+
+
+
+
+ 	      var $itemEl = this.$item.children( 'a' ), 
+ 	        eldata = { 
+ 	          href : $itemEl.attr( 'href' ), 
+ 	          largesrc : $itemEl.data( 'largesrc' ), 
+ 	          title : $itemEl.data( 'title' ), 
+ 	          description : $itemEl.data( 'description' ), 
+ 	          area : $itemEl.data( 'area' ), 
+ 	          tweeter : $itemEl.data( 'tweeter' ) 
+ 	        }; 
+ 	  
+ 	      this.$title.html( eldata.title ); 
+ 	      this.$area.html( eldata.area ); 
+ 	      this.$tweeter.html( eldata.tweeter ); 
+ 	      this.$description.html( eldata.description ); 
+ 	      this.$href.attr( 'href', eldata.href );
+
+
+
+
+ 	  <div class="entry-content"> 
+ 	      <ul id="og-grid" class="og-grid"> 
+ 	      <?php 
+ 	         $paged = ... ?> 
+ 	            
+ 	        <li> 
+ 	            <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id($post->ID), array( 1000,1000 ) ); ?> 
+ 	             <a href="<?php the_field('team_website'); ?>" data-largesrc="<?php echo $src[0] ?>" data-title="<?php the_title(); ?>" data-description="<?php the_field('team_description'); ?>" data-area="분야: <?php the_field('team_area'); ?>" data-tweeter="트위터: <?php the_field('team_tweeter'); ?>"> 
+ 	              <?php the_post_thumbnail('portfolio_fixed'); ?> 
+ 	            </a> 
+ 	        </li> 
+ 	        <?php endwhile; ?> 
+ 	      </ul><!-- .entry-content -->  
+ 	  </div><!-- .entry-content -->
+
+
+-------------------------------------------------400p
+
+
+ 	.og-details h3 { padding: 0px 0 10px; } 
+ 	.og-details p { color: #333; } 
+ 	.og-grid li img.attachment-portfolio_fixed { width: 272px; } 
+ 	.og-grid li { height: auto; } 
+ 	article .og-grid img { margin: 0; }
+
+
+
+
+
+ 	.og-grid li a { background: url(images/cursor.jpg) no-repeat; } 
+ 	.og-grid li a > img { transition: opacity .35s ease-in-out; 
+ 	   -moz-transition: opacity .35s ease-in-out; 
+ 	   -webkit-transition: opacity .35s ease-in-out; } 
+ 	.og-grid li a > img:hover {opacity:.4;}
+
+
+ 	<div class="entry-content">
+      ... 
+    $(function() { 
+      Grid.init(); 
+    }); 
+  </script> 
+       <?php endif; ?>
+
+
+
+전면 페이지에 코드 블록 삽입하기-----------------------402p
+
+
+	<div id="front-team" class="container-fluid p-all-0 m-top-30"> 
+	  <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(253), array( 10000,10000 ) ); ?> 
+	  <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+	    <div class="container get_excerpt"> 
+	      <h1><?php echo get_the_title(253); ?></h1> 
+	      <p><?php echo get_excerpt_by_id(253); ?></p> 
+	    </div> 
+	  </div> 
+	  <div class="container p-all-0"> 
+	    <?php get_template_part('code-block/front', 'team'); ?> 
+	  </div> 
+	</div><!-- #front-team -->  
+
+
+
+page-about.php 템플릿 만들기-------------------------404p
+
+  <div class="entry-content"> 
+      <div id="about" class="row da-thumbs"> 
+      <?php 
+         $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;  
+         $args = array( 
+           'post_type' => 'about', 
+           'posts_per_page' => 10, 
+           'paged'=>$paged 
+         ); 
+         $about = new WP_Query( $args ); 
+        if ( $about->have_posts() ) : 
+        while ( $about->have_posts() ) : $about->the_post(); ?> 
+        
+        <div class="thumbs col-md-4"> 
+          <a href="<?php echo get_permalink(); ?>"> 
+            <?php the_post_thumbnail('portfolio_fixed'); ?> 
+            <div> 
+              <span><?php the_title(); ?></span> 
+              <span><?php 
+                $excerpt = get_the_excerpt(); 
+                echo string_limit_words($excerpt,20); 
+              ?></span> 
+            </div> 
+          </a> 
+        </div>     
+  
+        <?php endwhile; ?> 
+      </div><!-- #about -->  
+  </div><!-- .entry-content -->
+
+
+  </div><!-- .entry-content --> 
+
+  <div class="row m-top-30 m-btm-20"> 
+    <div class="col-md-5 p-all-20 p-top-0"> 
+      <p><?php echo do_shortcode( '[contentblock id=company-messeage]' ) ?></p> 
+    </div> 
+    <div class="col-md-7"> 
+      <div id="progress-bar" class="p-lft-20 p-rgt-20"> 
+        <span>웹개발:</span> 
+        <div class="progress"> 
+          <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"> 
+            <span class="sr-only">80%</span> 
+          </div> 
+        </div> 
+        <span>웹디자인:</span> 
+        <div class="progress"> 
+          <div class="progress-bar progress-bar-info" role="progressbar" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100"> 
+            <span class="sr-only">90%</span> 
+          </div> 
+        </div> 
+        <span>포트폴리오:</span> 
+        <div class="progress"> 
+          <div class="progress-bar progress-bar-warning" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"> 
+            <span class="sr-only">60%</span> 
+          </div> 
+        </div> 
+        <span>포토샵:</span> 
+        <div class="progress"> 
+          <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="95" aria-valuemin="0" aria-valuemax="100"> 
+            <span class="sr-only">95%</span> 
+          </div> 
+        </div> 
+      </div> 
+    </div> 
+  </div>
+
+
+----------------------------------------------409p
+
+ 	//프로그레스바 
+ 	  $('.progress-bar').each(function() { 
+ 	      var me = $(this); 
+ 	      var perc = me.attr("aria-valuenow"); 
+ 	      var current_perc = 0; 
+ 	      var progress = setInterval(function() { 
+ 	          if (current_perc>=perc) { 
+ 	              clearInterval(progress); 
+ 	          } else { 
+ 	              current_perc +=1; 
+ 	              me.css('width', (current_perc)+'%'); 
+ 	          } 
+ 	          me.text((current_perc)+'%'); 
+ 	      }, 50); 
+ 	  });
+
+
+
+
+ 	#about .thumbs img { width:100%; height:auto; margin:0; } 
+ 	@media (max-width: 767px) and (min-width: 400px) { 
+ 	  ... 
+ 	  #about .col-md-4 { width: 33.333333%; float:left; } 
+ 	}  
+ 	@media (min-width: 768px) { 
+ 	  ... 
+ 	  #about .col-md-4 { width: 33.333333%; float:left; } 
+ 	}  
+
+
+전면 페이지 코드 블록 만들기-----------------------------410p
+
+
+  <div class="entry-content"> 
+      <div id="about" class="row da-thumbs"> 
+      <?php 
+         ...     
+
+        <?php endwhile; endif; ?> 
+      </div><!-- #about -->  
+  </div><!-- .entry-content --> 
+
+  <div class="row m-top-30 m-btm-20"> 
+    <div class="col-md-5 p-all-20 p-top-0"> 
+      <p><?php echo do_shortcode( '[contentblock id=company-messeage]' ) ?></p> 
+    </div> 
+    <div class="col-md-7"> 
+      <div id="progress-bar" class="p-lft-20 p-rgt-20"> 
+        ... 
+      </div> 
+    </div> 
+  </div><!-- .row -->
+
+
+
+
+	</div><!-- 슬라이더 --> 
+	<div id="front-about" class="container-fluid p-all-0 m-top-30"> 
+	  <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(284), array( 10000,10000 ) ); ?> 
+	  <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+	    <div class="container get_excerpt"> 
+	      <h1><?php echo get_the_title(284); ?></h1> 
+	      <p><?php echo get_excerpt_by_id(284); ?></p> 
+	    </div> 
+	  </div> 
+	  <div class="container p-all-0"> 
+	    <?php get_template_part('code-block/front', 'about'); ?> 
+	  </div> 
+	</div><!-- #front-about -->  
+	<div id="front-portfolio" class="container-fluid p-all-0">
+
+
+웨이포인트와 애니메이션 스타일시트 사용하기-------------------------412p
+
+https://github.com/imakewebthings/waypoints
+
+
+
+
+http://daneden.github.io/animate.css/
+
+
+
+
+
+ 	// 웨이포인트 
+ 	$( '.waypoint' ).each( function(i) { 
+ 	  var $el = $( this ), 
+ 	    animClassDown = $el.data( 'animateDown' ), 
+ 	    animClassUp = $el.data( 'animateUp' ); 
+ 	  
+ 	  $el.waypoint( function( direction ) { 
+ 	    if( direction === 'down' && animClassDown ) { 
+ 	      $el.addClass(animClassDown); 
+ 	    } 
+ 	    else if( direction === 'up' && animClassUp ){ 
+ 	      $el.addClass(animClassUp); 
+ 	    } 
+ 	  }, { offset: '100%' } ); 
+ 	} );
+
+
+
+  <div class="container p-all-0 waypoint" data-animate-down="zoomIn animated"> 
+    <?php get_template_part('code-block/front', 'portfolio'); ?> 
+  </div><!-- #front-portfolio -->
+
+
+
+ 	//프로그레스바 
+ 	$('#progress-bar').waypoint(function() { 
+ 	  $('.progress-bar').each(function() { 
+ 	      ...}, 50); 
+ 	  }); 
+ 	}, { offset: '100%' }); 
+
+
+
+
+ 	.moveDown {  position: relative;  top: 300px; } 
+ 	.moveUp { 
+ 	    transform: translateY(-300px); 
+ 	    -ms-transform: translateY(-300px); /* IE 9 */ 
+ 	    -webkit-transform: translateY(-300px); /* Safari and Chrome */ 
+ 	}
+
+
+
+
+
+ 	.slow { 
+ 	    -webkit-transition:all 3.0s linear; 
+ 	   -moz-transition:all 3.0s linear; 
+ 	   -o-transition:all 3.0s linear; 
+ 	   transition:all 3.0s linear; 
+ 	} 
+ 	  
+ 	.medium { 
+ 	    -webkit-transition:all 1.0s ease; 
+ 	   -moz-transition:all 1.0s ease; 
+ 	   -o-transition:all 1.0s ease; 
+ 	   transition:all 1.0s ease; 
+ 	} 
+ 	  
+ 	.fast { 
+ 	    -webkit-transition:all 0.1s linear; 
+ 	   -moz-transition:all 0.1s linear; 
+ 	   -o-transition:all 0.1s linear; 
+ 	   transition:all 0.1s linear; 
+ 	}
+
+
+
+  <div class="container p-all-0 waypoint moveDown" data-animate-down="moveUp medium"> 
+    <?php get_template_part('code-block/front', 'gallery'); ?> 
+  </div> 
+</div><!-- #front-gallery -->  
+
+
+
+
+https://github.com/inuyaksa/jquery.nicescroll
+
+
+
+
+
+
+ 	$("html").niceScroll(); 
+
+
+
+
+page-gridblog.php 템플릿 만들기---------------------416p
+
+
+
+
+  <?php 
+     $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;  
+     $args = array( 
+       'post_type' => 'gridblog', 
+       'posts_per_page' => 10, 
+       'paged'=>$paged
+
+
+
+
+  <div class="all thumbs <?php echo of_get_option('seven_effects', 'no entry' ); ?> col-md-3 <?php echo $tax; ?>"> 
+    <div> 
+      <figure> 
+        <?php the_post_thumbnail('portfolio'); ?> 
+        <figcaption>
+
+
+ 	//그리드 블로그 아이소톱 
+ 	  var $container4 = $('#gridblog'); 
+ 	  $container4.isotope({ 
+ 	    itemSelector: '.thumbs', 
+ 	    masonry: { 
+ 	      columnWidth: '.col-md-6, .col-md-4, .col-md-3' 
+ 	    } 
+ 	  }); 
+ 	  
+ 	  $container4.imagesLoaded( function() { 
+ 	    $container4.isotope('layout'); 
+ 	  }); 
+ 	  
+ 	  $('#gridblog-filter a').click(function(){ 
+ 	    $('#gridblog-filter a.active').removeClass('active'); 
+ 	    var selector = $(this).attr('data-filter'); 
+ 	    $container4.isotope({ filter: selector, animationEngine : "css" }); 
+ 	    $(this).addClass('active'); 
+ 	    return false; 
+ 	  });
+
+
+부트스트랩 모달 기능 추가하기-----------------------419p
+
+ 	  <div class="all thumbs <?php echo of_get_option('seven_effects', 'no entry' ); ?> col-md-3 <?php echo $tax; ?>"> 
+ 	    <div> 
+ 	      <figure> 
+ 	        <?php the_post_thumbnail('portfolio'); ?> 
+ 	        <figcaption> 
+ 	          <span><?php the_title(); ?></span> 
+ 	          <a href="#myModal-<? the_ID(); ?>" data-toggle="modal">더 보기</a> 
+ 	        </figcaption>  
+ 	      </figure>  
+ 	    </div>  
+ 	  </div>
+
+
+
+
+ 	  <!-- Modal --> 
+ 	  <div class="modal fade" id="myModal-<?php the_ID(); ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"> 
+ 	    <div class="modal-dialog modal-lg"> 
+ 	      <div class="modal-content"> 
+ 	        <div class="modal-header"> 
+ 	          <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button> 
+ 	          <h4 class="modal-title" id="myModalLabel"><?php the_title();?></h4> 
+ 	        </div> 
+ 	        <div class="modal-body"> 
+ 	          <?php the_post_thumbnail(); ?> 
+ 	          <?php the_content();?> 
+ 	            <?php 
+ 	            // If comments are open or we have at least one comment, load up the comment template. 
+ 	            $withcomments = 1; 
+ 	            if ( comments_open() || get_comments_number() ) : 
+ 	              comments_template(); 
+ 	            endif; 
+ 	
+ 	            ?>                        
+ 	        </div> 
+ 	        <div class="modal-footer"> 
+ 	          <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button> 
+ 	        </div> 
+ 	      </div> 
+ 	    </div> 
+ 	  </div> 
+ 	  
+ 	  <?php endwhile; ?>
+
+
+
+
+    <article> 
+      <div class="entry-content"> 
+        ... 
+      </div><!-- .entry-content --> 
+    </article> 
+
+
+
+
+ 	  <div id="gridblog" class="infinite no-touch"> 
+ 	  <?php 
+ 	     $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;  
+ 	     $args = array( 
+ 	       'post_type' => 'gridblog', 
+ 	       'posts_per_page' => 6, 
+ 	       'paged'=>$paged
+
+
+
+
+
+ 	    <div class="all thumbs <?php echo of_get_option('seven_effects', 'no entry' ); ?> col-md-3 <?php echo $tax; ?>"> 
+ 	      <div> 
+ 	        <figure> 
+ 	          <?php the_post_thumbnail('portfolio'); ?> 
+ 	          <figcaption> 
+ 	            <span><?php the_title(); ?></span> 
+ 	            <a href="<?php echo get_permalink(); ?>">더 보기</a> 
+ 	          </figcaption>  
+ 	        </figure>  
+ 	      </div>  
+ 	    </div> 
+ 	  
+ 	    <!-- Modal --> 
+ 	    <div class="modal fade" id="myModal-<?php the_ID(); ?>" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true"> 
+ 	      ... 
+ 	    </div><!-- Modal --> 
+ 	  
+ 	    <?php endwhile; endif; ?> 
+ 	  
+ 	    <?php 
+ 	      wp_link_pages( array(... 
+ 	    ?> 
+ 	  
+ 	  </div><!-- #gridblog --> 
+ 	</div><!-- .entry-content -->
+
+
+
+
+  <div id="front-gridblog" class="container-fluid p-all-0 m-top-30"> 
+    <?php $src = wp_get_attachment_image_src( get_post_thumbnail_id(295), array( 10000,10000 ) ); ?> 
+    <div class="code-block text-center overlay m-btm-30"style="background: url(<?php echo $src[0]; ?>) center no-repeat;background-size:cover;padding: 80px 0;" data-stellar-background-ratio="0.5"> 
+      <div class="container get_excerpt"> 
+        <h1><?php echo get_the_title(295); ?></h1> 
+        <p><?php echo get_excerpt_by_id(295); ?></p> 
+      </div> 
+    </div> 
+    <div class="container p-all-0 waypoint moveDown" data-animate-down="moveUp medium"> 
+      <?php get_template_part('code-block/front', 'gridblog'); ?> 
+    </div> 
+  </div><!-- #front-gridblog -->
+
+
+------------------------------------------424p
+
+  <figure> 
+    <?php the_post_thumbnail('portfolio_fixed'); ?> 
+    <figcaption>
+
+
+page-board.php 템플릿 만들기----------------------426p
+
+ 	    </div><!-- #content --> 
+ 	    <div id="sidebar1" class="col-md-4"> 
+ 	      <div id="secondary" class="secondary"> 
+ 	        <?php if ( is_active_sidebar( 'sidebar-6' ) ) : ?> 
+ 	          <div id="widget-area" class="widget-area" role="complementary"> 
+ 	            <?php dynamic_sidebar( 'sidebar-6' ); ?> 
+ 	          </div><!-- .widget-area --> 
+ 	        <?php endif; ?> 
+ 	      </div> 
+ 	    </div><!--#sidebar--> 
+ 	  </div><!-- .row --> 
+ 	</div><!-- .container -->
+
+
+
+
+ 	<article id="post-<?php the_ID(); ?>" <?php post_class(); ?>> 
+ 	  <?php 
+ 	  if (!is_page_template('page-side_right.php' ) && !is_page_template('page-side_left.php' ) && !is_page_template('page-board.php' )) : 
+ 	    // Post thumbnail. 
+ 	    twentyfifteen_post_thumbnail(); 
+ 	  endif; 
+ 	  ?> 
+ 	  
+ 	  <?php if (!is_page_template('page-side_right.php' ) && !is_page_template('page-side_left.php' ) && !is_page_template('page-board.php' )) : ?> 
+ 	  <header class="entry-header">
+
+
+
+게시판 싱글 페이지 수정하기------------------------------427p
+
+ 	  global $current_user, $post; 
+ 	?> 
+ 	<div class="container-fluid p-all-0 question"> 
+ 	  <?php echo do_shortcode('[header_bar]'); ?>  
+ 	</div><!-- .container-fluid --> 
+ 	  
+ 	<div class="container"> 
+ 	  <div class="row"> 
+ 	    <?php if ( have_posts() ) : ?> 
+ 	      <?php while ( have_posts() ) : the_post(); ?> 
+ 	        <?php $post_id = get_the_ID(); $post_status = get_post_status();  ?> 
+ 	        <div class="dwqa-single-question col-md-8"> 
+
+ 	  global $current_user, $post;      
+ 	?> 
+ 	<div class="container-fluid p-all-0 question"> 
+ 	  <?php echo do_shortcode('[header_bar]'); ?>  
+ 	</div><!-- .container-fluid --> 
+ 	  
+ 	    <?php if ( have_posts() ) : ?> 
+ 	      <?php while ( have_posts() ) : the_post(); ?> 
+ 	        <?php $post_id = get_the_ID(); $post_status = get_post_status();  ?> 
+ 	        <div class="dwqa-single-question col-md-8">
+
+
+
+
+ 	      <?php endwhile; // end of the loop. ?>  
+ 	    <?php endif; ?> 
+ 	  
+ 	    <div id="sidebar1" class="col-md-4"> 
+ 	      <div id="secondary" class="secondary"> 
+ 	        <?php if ( is_active_sidebar( 'sidebar-6' ) ) : ?> 
+ 	          <div id="widget-area" class="widget-area" role="complementary"> 
+ 	            <?php dynamic_sidebar( 'sidebar-6' ); ?> 
+ 	          </div><!-- .widget-area --> 
+ 	        <?php endif; ?> 
+ 	      </div> 
+ 	    </div><!--#sidebar--> 
+ 	    <div class="clearfix"></div>
+
+
+
+
+템플릿 추가 수정-------------------------------------431p
+
+
+ 	<article id="post-<?php the_ID(); ?>" <?php post_class('child-content-php'); ?>> 
+
+
+
+
+ 	<div class="container"> 
+ 	  <div class="row"> 
+ 	    <div id="content" class="col-md-8"> 
+ 	      <div id="primary" class="content-area child-single-php"> 
+ 	        <main id="main" class="site-main" role="main">
+
+
+
+
+ 	<article id="post-<?php the_ID(); ?>" <?php post_class('parent-content-php'); ?>> 
+
+
+
+ 	  
+ 	<div id="primary" class="content-area  parent-single-php">
+
+
+
+
+content.php 템플릿 수정하기----------------------433p
+
+
+http://codex.wordpress.org/Conditional_Tags
+
+
+
+
+ 	//글 타입 조건 태그 
+ 	function is_post_type($type){ 
+ 	    global $wp_query; 
+ 	    if($type == get_post_type($wp_query->post->ID)) return true; 
+ 	    return false; 
+ 	} 
+
+
+
+ 	<?php if ( is_single() && is_post_type( 'dwqa-question' )) : ?> 
+ 	   <div class="container"> 
+ 	<?php endif; ?> 
+ 	  
+ 	<article id="post-<?php the_ID(); ?>" <?php post_class('child-content-php'); ?>> 
+
+
+
+
+ 	</article><!-- #post-## --> 
+ 	  
+ 	<?php if ( is_single() && is_post_type( 'dwqa-question' )) : ?> 
+ 	  </div> 
+ 	<?php endif; ?> 
+
+
+
+
+ 	@media (min-width: 1200px) { 
+ 	  ... 
+ 	  .single-dwqa-question .navigation { width: 1168px; margin: 0 auto; } 
+ 	}
+
+
+
+---------------------------------------------436p
+
+
+Howdy {question_author} → 안녕하세요. {question_author}님
+{answer_author} has answered your question at "{question_title}": → {answer_author}님이 "{question_title}”에서 게시글에 답변을 올렸습니다 :
+{comment_author} has commented on your question at "{question_title}": → {comment_author}님이 "{question_title}"에서 게시글에 댓글을 달았습니다 :
+{comment_author} has commented on your answer at "{question_title}" → {comment_author}님이 "{question_title}"에서 답변에 댓글을 달았습니다 :
+{answer_author} has answered your followed question at "{question_title}": → {answer_author}님이 "{question_title}"에서 팔로우 하는 게시글에 답변을 달았습니다 :
+{comment_author} has commented on your followed question at "{question_title}":  → {comment_author}님이 "{question_title}"에서 팔로우하는 게시글에 댓글을 달았습니다 :
+{comment_author} has commented on your followed answer at "{question_title}": → {comment_author}님이 "{question_title}"에서 팔로우 하는 답변에 댓글을 달았습니다 :
+
+
+	.question { 
+ 	  margin-left: -50px !important; 
+ 	  background-image: url(images/content-bg.jpg); 
+ 	} 
+ 	body .dwqa-container .breadcrumbs a { color: #fff !important; text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5); } 
+ 	.dwqa-widget .question-title { display: inline; } 
+ 	  
+ 	@media (max-width: 499px) { 
+ 	  ... 
+ 	  .question {  margin-left: 0px !important; } 
+ 	} 
+ 	@media (max-width: 767px) and (min-width: 500px) { 
+ 	  ... 
+ 	  .question {  margin-left: 0px !important; } 
+ 	} 
+
+
+
+드롭다운 버튼 문제 해결 방법------------------------------440p
+
+
+ 	// 부모 테마 자바스크립트 비활성화 
+ 	function parent_dequeue_script() { 
+ 	   wp_dequeue_script( 'twentyfifteen-script' ); 
+ 	} 
+ 	add_action( 'wp_print_scripts', 'parent_dequeue_script' ); 
+
+
+
+
+영어로 나타나는 문제 해결 방법-------------------------------443p
+
+ 	add_filter('gettext',  'translate_text'); 
+ 	add_filter('ngettext',  'translate_text'); 
+ 	
+ 	function translate_text($translated) { 
+ 	     $translated = str_ireplace('답변 추가',  '답변 달기',  $translated); 
+ 	     
+ 	     return $translated; 
+ 	}
+
+
+
+
+ 	$(".dwqa-popular-questions ul li").each(function() {
+ 	    var text = $(this).text();
+ 	    text = text.replace( /\bago\b/g, "전" );
+ 	    $(this).text(text);
+ 	});
+
+
+
+ 	// http://stackoverflow.com/a/9795091 
+ 	$.fn.wrapInTag = function (opts) { 
+ 	    // http://stackoverflow.com/a/1646618 
+ 	    function getText(obj) { 
+ 	        return obj.textContent ? obj.textContent : obj.innerText; 
+ 	    } 
+ 	  
+ 	    var tag = opts.tag || 'strong', 
+ 	        words = opts.words || [], 
+ 	        regex = RegExp(words.join('|'), 'gi'), 
+ 	        replacement = '<' + tag + ' >$&</' + tag + '>'; 
+ 	  
+ 	    // http://stackoverflow.com/a/298758 
+ 	    $(this).contents().each(function () { 
+ 	        if (this.nodeType === 3) //Node.TEXT_NODE 
+ 	        { 
+ 	            // http://stackoverflow.com/a/7698745 
+ 	            $(this).replaceWith(getText(this).replace(regex, replacement)); 
+ 	        } 
+ 	        else if (!opts.ignoreChildNodes) { 
+ 	            $(this).wrapInTag(opts); 
+ 	        } 
+ 	    }); 
+ 	}; 
+ 	  
+ 	$('li, #sidebar1').wrapInTag({ 
+ 	  tag: 'span', 
+ 	  words: ['ago', '게시글'] 
+ 	});
+
+
+
+
+ 	$('.dwqa-widget li span').text('전'); 
+ 	.dwqa-widget li span { display: none; } 
+ 	.dwqa-widget li:after {  content: '전'; } 
+
+
+
