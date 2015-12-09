@@ -1,0 +1,56 @@
+@CHARSET "utf-8";
+#toggle-menu {
+	display: block;
+	width: 50px;
+	height: 40px;
+	padding: 20px;
+	cursor: pointer;
+}
+#toggle-menu div {
+	width: 25px;
+	height: 25px;
+	position: relative;
+}
+#toggle-menu span {
+	display: block;
+    width: 25px;
+	height: 5px;
+	background: black;
+	position: absolute;
+	-webkit-transition: -webkit-transform 0.5s ease-in-out, top 0.25s ease-in-out 0.5s, opacity 0.25s ease-in-out 0.5s;
+    -moz-transition: -moz-transform 0.5s ease-in-out, top 0.25s ease-in-out 0.5s, opacity 0.25s ease-in-out 0.5s;
+    transition: transform 0.5s ease-in-out, top 0.25s ease-in-out 0.5s, opacity 0.25s ease-in-out 0.5s;
+	-webkit-transform-origin: center;
+    -moz-transform-origin: center;
+    transform-origin: center;
+}
+#toggle-menu span.top {
+	top: 0px;
+}
+#toggle-menu span.middle {
+	top: 10px;
+}
+#toggle-menu span.bottom {
+	top: 10px;
+}
+
+#toggle-menu.menu-is-active span {
+	-webkit-transition: -webkit-transform 0.5s ease-in-out 0.3s, top 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    -moz-transition: -moz-transform 0.5s ease-in-out 0.3s, top 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    transition: transform 0.5s ease-in-out 0.3s, top 0.25s ease-in-out, opacity 0.25s ease-in-out;
+}
+#toggle-menu.menu-is-active span.top, #toggle-menu.menu-is-active span.middle {
+	top: 6px;
+	-webkit-transform: rotate(135deg);
+    -moz-transform: rotate(135deg);
+    transform: rotate(135deg);
+}
+#toggle-menu.menu-is-active span.middle {
+	opacity: 0;
+}
+#toggle-menu.menu-is-active span.bottom {
+	top: 6px;
+	-webkit-transform: rotate(225deg);
+    -moz-transform: rotate(225deg);
+    transform: rotate(225deg);
+}
